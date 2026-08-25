@@ -50,13 +50,17 @@ export default async function handler(req, res) {
   const key = process.env.SALVAGEALERT_KEY;
   if (!key) return res.status(500).json({ ok:false, error:'SALVAGEALERT_KEY is not configured on the backend.' });
 
-  const requested = String(req.body?.source || 'copart_us');
+  const requested = String(req.body?.source || 'smart');
   const pageSize = Math.max(1, Math.min(50, Number(req.body?.page_size || 20)));
   const query = String(req.body?.query || '').trim().slice(0,160);
   const maxPrice = Number(req.body?.max_price) > 0 ? Number(req.body.max_price) : null;
-  const sources = requested === 'all' ? [...ALLOWED_SOURCES] : [requested];
+  const smartMin = Math.max(1, Math.min(25, Number(req.body?.smart_min || 10)));
+  const smartOrder = ['iaai_us','copart_us','govdeals_us'];
+  const sources = requested === 'all' ? [...ALLOWED_SOURCES]
+    : requested === 'smart' ? smartOrder
+    : [requested];
 
-  if (sources.some(s => !ALLOWED_SOURCES.includes(s))) {
+  if (!['all','smart',...ALLOWED_SOURCES].includes(requested) || sources.some(s => !ALLOWED_SOURCES.includes(s))) {
     return res.status(400).json({ ok:false, error:'Unsupported source.' });
   }
 
@@ -106,6 +110,7 @@ export default async function handler(req, res) {
         fallback_used:fallbackUsed,
         pagination:data?.pagination || data?.meta || data?.page || null
       });
+      if (requested === 'smart' && dedupeLots(allLots).length >= smartMin) break;
     } catch (error) {
       sourceStatus.push({
         source, name:normalizeSourceName(source), ok:false,
@@ -120,6 +125,7 @@ export default async function handler(req, res) {
     ok:true,
     live:true,
     provider:'SalvageAlert',
+    strategy:requested,
     query,
     parsed:{
       make:parsed.make, model:parsed.model, trims:parsed.trims,
