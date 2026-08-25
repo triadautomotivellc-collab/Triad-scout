@@ -1,0 +1,43 @@
+TRIAD SCOUT INTELLIGENCE v0.7 TEST REPORT
+==========================================
+
+Status: PASS
+
+Re-run on current packaged working tree:
+- JavaScript syntax validation: PASS
+- index.html inline script validation: PASS
+- Automated regression suite: 52 passed / 0 failed
+
+Major covered areas:
+- Copart fee brackets and percentage transition
+- Copart live vs pre-bid fee differences
+- IAA unknown-fee guard + manual override
+- Historical hammer estimator and outlier resistance
+- Exclusion of live current bids from historical final-price labels
+- Sparse comp confidence downgrade
+- Flood / parts-only manual-review risk gates
+- Nonlinear Max Recommended Bid solver
+- Repair and tax sensitivity
+- Unknown-tax hard-cap blocking
+- ACV-only resale guard
+- Manual repair / transport inputs
+- Optional-provider graceful degradation
+- Configured-provider complete Copart intelligence snapshot
+- Same-ZIP transport not assumed free
+- Camaro SS structured filter + trim rejection
+- Smart source search fallback/stop behavior
+- Source failure isolation
+- Zero verified result behavior
+- Vehicle parser coverage for performance trims
+- Dedupe
+- Deal Score penalties
+- Current-bid provisional scoring
+- Historical comp estimator robustness
+- Live zero-result UI no-demo regression
+- Smart source default
+- Intelligence panel embedded in result cards
+- Unknown tax/resale-discount not silently invented
+
+Important:
+External provider accuracy still depends on real provider data returned at runtime.
+Optional integrations (MarketCheck, CarsXE, Super Dispatch, RepairSnap) require their own keys to provide live enrichment.

@@ -1,0 +1,227 @@
+TRIAD SCOUT MAJOR ALPHA v0.6 TEST REPORT
+========================================
+RESULT: PASS
+
+Key fixes verified:
+- Camaro SS => CHEVROLET / Camaro / trim SS
+- Camaro LT is rejected for an SS query
+- Expanded enthusiast trim resolver
+- Smart US Search begins with IAA, falls through only as needed
+- A zero live result cannot fall back to prototype cards
+- One auction-source failure does not kill the other sources
+- Existing Deal Score and historical-comparable estimator tests retained
+
+Automated output:
+-----------------
+
+> triad-scout@0.6.0-alpha test
+> npm run check && node --test tests/*.test.mjs
+
+
+> triad-scout@0.6.0-alpha check
+> node --check api/health.js && node --check api/salvage-search.js && node --check api/self-test.js && node --check lib/scout-core.js && node scripts/validate-index.mjs
+
+index.html validation passed (1 script block).
+TAP version 13
+# Subtest: Camaro SS sends Camaro model and filters LT
+ok 1 - Camaro SS sends Camaro model and filters LT
+  ---
+  duration_ms: 30.922155
+  type: 'test'
+  ...
+# Subtest: smart stops when IAA has enough
+ok 2 - smart stops when IAA has enough
+  ---
+  duration_ms: 1.025731
+  type: 'test'
+  ...
+# Subtest: smart falls through when IAA has no verified trim
+ok 3 - smart falls through when IAA has no verified trim
+  ---
+  duration_ms: 1.261929
+  type: 'test'
+  ...
+# Subtest: one-source failure does not kill all-source search
+ok 4 - one-source failure does not kill all-source search
+  ---
+  duration_ms: 4.183376
+  type: 'test'
+  ...
+# Subtest: zero verified is valid empty success
+ok 5 - zero verified is valid empty success
+  ---
+  duration_ms: 1.538166
+  type: 'test'
+  ...
+# Subtest: canonical punctuation
+ok 6 - canonical punctuation
+  ---
+  duration_ms: 1.009306
+  type: 'test'
+  ...
+# Subtest: F150 normalization
+ok 7 - F150 normalization
+  ---
+  duration_ms: 1.56769
+  type: 'test'
+  ...
+# Subtest: parser taurus sho
+ok 8 - parser taurus sho
+  ---
+  duration_ms: 1.679169
+  type: 'test'
+  ...
+# Subtest: parser explorer sport
+ok 9 - parser explorer sport
+  ---
+  duration_ms: 0.884898
+  type: 'test'
+  ...
+# Subtest: parser explorer st
+ok 10 - parser explorer st
+  ---
+  duration_ms: 1.077319
+  type: 'test'
+  ...
+# Subtest: parser camaro ss
+ok 11 - parser camaro ss
+  ---
+  duration_ms: 0.505845
+  type: 'test'
+  ...
+# Subtest: parser camaro zl1
+ok 12 - parser camaro zl1
+  ---
+  duration_ms: 0.347546
+  type: 'test'
+  ...
+# Subtest: parser camaro lt1
+ok 13 - parser camaro lt1
+  ---
+  duration_ms: 0.187483
+  type: 'test'
+  ...
+# Subtest: parser corvette z06
+ok 14 - parser corvette z06
+  ---
+  duration_ms: 0.507427
+  type: 'test'
+  ...
+# Subtest: parser corvette zr1
+ok 15 - parser corvette zr1
+  ---
+  duration_ms: 0.511473
+  type: 'test'
+  ...
+# Subtest: parser mustang gt
+ok 16 - parser mustang gt
+  ---
+  duration_ms: 0.247394
+  type: 'test'
+  ...
+# Subtest: parser mustang shelby gt500
+ok 17 - parser mustang shelby gt500
+  ---
+  duration_ms: 0.151169
+  type: 'test'
+  ...
+# Subtest: parser charger scat pack
+ok 18 - parser charger scat pack
+  ---
+  duration_ms: 0.301806
+  type: 'test'
+  ...
+# Subtest: parser challenger r/t
+ok 19 - parser challenger r/t
+  ---
+  duration_ms: 0.241956
+  type: 'test'
+  ...
+# Subtest: parser grand cherokee trackhawk
+ok 20 - parser grand cherokee trackhawk
+  ---
+  duration_ms: 0.291641
+  type: 'test'
+  ...
+# Subtest: parser civic type r
+ok 21 - parser civic type r
+  ---
+  duration_ms: 0.293975
+  type: 'test'
+  ...
+# Subtest: parser wrx sti
+ok 22 - parser wrx sti
+  ---
+  duration_ms: 0.274054
+  type: 'test'
+  ...
+# Subtest: Camaro SS base-model provider filter
+ok 23 - Camaro SS base-model provider filter
+  ---
+  duration_ms: 0.240744
+  type: 'test'
+  ...
+# Subtest: Camaro SS accepts SS rejects LT
+ok 24 - Camaro SS accepts SS rejects LT
+  ---
+  duration_ms: 0.858127
+  type: 'test'
+  ...
+# Subtest: Taurus SHO rejects non-SHO
+ok 25 - Taurus SHO rejects non-SHO
+  ---
+  duration_ms: 0.175435
+  type: 'test'
+  ...
+# Subtest: year and radius parse
+ok 26 - year and radius parse
+  ---
+  duration_ms: 0.255617
+  type: 'test'
+  ...
+# Subtest: dedupe source lot
+ok 27 - dedupe source lot
+  ---
+  duration_ms: 0.544523
+  type: 'test'
+  ...
+# Subtest: deal score flood penalty
+ok 28 - deal score flood penalty
+  ---
+  duration_ms: 0.485795
+  type: 'test'
+  ...
+# Subtest: current bid provisional
+ok 29 - current bid provisional
+  ---
+  duration_ms: 0.157458
+  type: 'test'
+  ...
+# Subtest: comp estimator robust against huge outlier
+ok 30 - comp estimator robust against huge outlier
+  ---
+  duration_ms: 0.594569
+  type: 'test'
+  ...
+# Subtest: live zero does not show demos
+ok 31 - live zero does not show demos
+  ---
+  duration_ms: 0.821913
+  type: 'test'
+  ...
+# Subtest: Smart search is default
+ok 32 - Smart search is default
+  ---
+  duration_ms: 0.180162
+  type: 'test'
+  ...
+1..32
+# tests 32
+# suites 0
+# pass 32
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 118.280024
+

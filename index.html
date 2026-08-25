@@ -98,6 +98,30 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .auction-metrics b{color:#f0f2f6;font-weight:700;font-variant-numeric:tabular-nums}
 .price-label{font-size:9px;text-transform:uppercase;letter-spacing:.09em;color:#858d99;text-align:right;margin-bottom:1px}
 .score-confidence{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#8b93a0;margin-left:6px}
+\n/* TRIAD Intelligence v0.7 */
+.intel-profile{margin-top:14px;padding-top:14px;border-top:1px solid #20242a}
+.intel-profile-title{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:750;color:#e2e5e9;margin-bottom:5px}
+.intel-profile-title span{font-size:9px;letter-spacing:.08em;color:#ff5b68;border:1px solid rgba(255,64,80,.28);border-radius:999px;padding:3px 6px}
+.intel-profile-note{font-size:10.5px;color:#777f8b;line-height:1.45;margin-bottom:10px}
+.intel-mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.intel-mini-grid .field{margin-top:0}.intel-mini-grid .field input,.intel-mini-grid .field select{height:36px;font-size:11px;padding:0 8px}
+.intel-mini-grid .field label{font-size:10px;margin-bottom:5px}
+.intel-check{display:flex;align-items:flex-start;gap:7px;font-size:10.5px;color:#8e96a1;margin-top:9px;line-height:1.35}.intel-check input{margin-top:2px;accent-color:var(--red)}
+.intel-card{grid-column:1/-1;border-top:1px solid #20242a;padding-top:9px;min-width:0}
+.intel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.intel-title{display:flex;align-items:center;gap:7px;font-size:10px;letter-spacing:.095em;text-transform:uppercase;color:#c6cbd2;font-weight:800}
+.intel-title:before{content:"◆";font-size:8px;color:#ff4050}
+.intel-analyze{height:28px;padding:0 10px;border:1px solid #383e48;border-radius:8px;background:#171a1f;color:#e5e8ec;font-size:10.5px;font-weight:650;cursor:pointer}.intel-analyze:hover{border-color:#565e6b;background:#1c2026}.intel-analyze:disabled{opacity:.55;cursor:wait}
+.intel-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}
+.intel-metric{min-width:0;background:#0c0e11;border:1px solid #20242a;border-radius:8px;padding:7px 8px}
+.intel-label{font-size:8.5px;text-transform:uppercase;letter-spacing:.075em;color:#69717d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.intel-value{margin-top:2px;font-size:13px;font-weight:750;color:#edf0f3;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.intel-value.hot{color:#ff4656}.intel-value.good{color:#6cdb98}.intel-value.warn{color:#e9b949}
+.intel-detail{font-size:8.5px;color:#6f7783;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.intel-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:7px;min-width:0}.intel-status{font-size:9.5px;color:#7b838e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.intel-decision{font-size:9px;font-weight:800;letter-spacing:.06em;border:1px solid #323740;background:#15181d;padding:4px 7px;border-radius:999px;white-space:nowrap}.intel-decision.good{color:#6cdb98;border-color:rgba(85,217,139,.3)}.intel-decision.bad{color:#ff6b76;border-color:rgba(255,64,80,.3)}.intel-decision.warn{color:#e9b949;border-color:rgba(233,185,73,.3)}
+.intel-loading{font-size:10.5px;color:#9299a4;padding:4px 0}.intel-error{font-size:10.5px;color:#ff7380;padding:4px 0}
+@media(max-width:1050px){.intel-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:620px){.intel-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.intel-mini-grid{grid-template-columns:1fr}.intel-foot{align-items:flex-start;flex-direction:column}.card{grid-template-columns:1fr}.photo{height:190px}}
 
 .bottomline{display:flex;align-items:center;justify-content:space-between;gap:12px}.seller{min-width:0;font-size:12px;color:#858c97;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.seller strong{color:#cdd1d7;font-weight:600}.view-btn{border:1px solid #343942;background:#191c21;height:34px;border-radius:9px;padding:0 11px;font-size:12px;font-weight:650;cursor:pointer;white-space:nowrap}.view-btn:hover{background:#22262c}.landed{font-variant-numeric:tabular-nums}.landed strong{font-size:15px;color:#f2f3f5}
 
@@ -204,11 +228,28 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   </div>
   <div class="field"><label for="sortSelectLeft">Condition</label><select id="conditionSelect"><option value="all">Any condition</option><option value="used">Used / OEM</option><option value="vehicle">Vehicle listings</option></select></div>
   <details class="advanced">
-   <summary>Advanced filters</summary>
+   <summary>Advanced filters + Buy Intelligence</summary>
    <div class="checks">
     <label class="check"><input type="checkbox" checked> Exact / interchange matches</label>
     <label class="check"><input type="checkbox" checked> Include shipping options</label>
     <label class="check"><input type="checkbox"> Local results only</label>
+   </div>
+   <div class="intel-profile">
+    <div class="intel-profile-title">Buy Intelligence Profile <span>v0.7</span></div>
+    <div class="intel-profile-note">Blank means unknown — Scout will withhold a hard Max Bid instead of inventing a number.</div>
+    <div class="intel-mini-grid">
+     <div class="field"><label for="intelDestZip">Destination ZIP</label><input id="intelDestZip" inputmode="numeric" maxlength="5" placeholder="53913"></div>
+     <div class="field"><label for="intelTaxRate">Tax rate %</label><input id="intelTaxRate" inputmode="decimal" placeholder="5.5"></div>
+     <div class="field"><label for="intelMargin">Target margin %</label><input id="intelMargin" inputmode="decimal" value="18"></div>
+     <div class="field"><label for="intelMinProfit">Min profit $</label><input id="intelMinProfit" inputmode="numeric" value="2000"></div>
+     <div class="field"><label for="intelRebuiltDiscount">Salvage resale discount %</label><input id="intelRebuiltDiscount" inputmode="decimal" placeholder="25"></div>
+     <div class="field"><label for="intelTransportReserve">Transport reserve $</label><input id="intelTransportReserve" inputmode="numeric" placeholder="800"></div>
+     <div class="field"><label for="intelBidMode">Copart bid mode</label><select id="intelBidMode"><option value="live">Live bid</option><option value="prebid">Pre-bid</option></select></div>
+     <div class="field"><label for="intelManualRepair">Manual repair $</label><input id="intelManualRepair" inputmode="numeric" placeholder="optional"></div>
+     <div class="field"><label for="intelIaaFixed">IAA fee override $</label><input id="intelIaaFixed" inputmode="numeric" placeholder="optional"></div>
+     <div class="field"><label for="intelIaaPct">IAA fee override %</label><input id="intelIaaPct" inputmode="decimal" placeholder="optional"></div>
+    </div>
+    <label class="intel-check"><input id="intelCopartProfile" type="checkbox"> My Copart account matches U.S. licensed, lower-volume, Standard Pricing, secured payment profile.</label>
    </div>
   </details>
   <button class="search-btn" id="applyBtn" type="button">Apply filters</button>
@@ -292,6 +333,7 @@ const SOURCES = [
 ];
 let LIVE_LISTINGS=[];
 let FEED_MODE='demo';
+const INTELLIGENCE_BY_ID=new Map();
 let userLocation=null;
 let state={mode:'Everything',view:'list',query:'',radius:250,maxPrice:10000,sort:'score'};
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -454,6 +496,7 @@ function normalizeSalvageLot(lot,i){
  const yardName=typeof yardObj==='string'?yardObj:(yardObj?.name||yardObj?.title||yardObj?.branch||'Auction yard');
  const city=firstValue(lot,['city','yard_city','location.city','yard.city','storage_location.city'])||'';
  const st=firstValue(lot,['state','yard_state','location.state','yard.state','storage_location.state'])||'';
+ const yardZip=firstValue(lot,['zip','postal_code','yard_zip','location.zip','location.postal_code','yard.zip','yard.postal_code','storage_location.zip'])||'';
  const currentBid=num(firstValue(lot,['current_bid','bid','high_bid','bid_amount','pricing.current_bid','pricing.bid']))||0;
  const buyNow=num(firstValue(lot,['buy_now_price','buy_now','buyNow','buy_it_now','pricing.buy_now']))||0;
  const acv=num(firstValue(lot,['acv','actual_cash_value','pre_loss_value','preloss_value','pre_loss','estimated_value','retail_value','pricing.acv']))||0;
@@ -482,7 +525,8 @@ function normalizeSalvageLot(lot,i){
   fit:'Live auction vehicle', interchange:vin?`VIN ${vin}`:`Lot ${lotKey}`,
   photo:validHttpUrl(photo)?photo:placeholder(title), url:validHttpUrl(url)?url:'',
   apiLive:true, lotKey:String(lotKey), vin:String(vin||''), raw:lot, lat, lon,
-  titleStatus:String(titleStatus||''), runDrive, keys
+  titleStatus:String(titleStatus||''), runDrive, keys, year:Number(year)||null, make:String(make||''), model:String(model||''), trim:String(trim||''),
+  damage:String(damage||''), mileageValue:num(odo)||0, yardZip:String(yardZip||'')
  };
 }
 
@@ -497,6 +541,52 @@ function filtered(){
  else if(state.sort==='distance')arr.sort((a,b)=>(a.distance??999999)-(b.distance??999999));
  else arr.sort((a,b)=>b.score-a.score);
  return arr;
+}
+function moneyOrDash(v){const n=Number(v);return Number.isFinite(n)&&n>0?money(n):'—'}
+function pctOrDash(v){const n=Number(v);return Number.isFinite(n)?`${Math.round(n*100)}%`:'—'}
+function intelligenceProfile(){
+ const pct=(id)=>{const raw=$(`#${id}`).value.trim();if(raw==='')return null;const n=Number(raw);return Number.isFinite(n)?n/100:null};
+ const moneyInput=(id)=>{const raw=$(`#${id}`).value.trim();if(raw==='')return null;const n=Number(raw.replace(/[$,]/g,''));return Number.isFinite(n)&&n>=0?n:null};
+ const repair=moneyInput('intelManualRepair');
+ const iaaFixed=moneyInput('intelIaaFixed'), iaaPct=pct('intelIaaPct');
+ return {
+  destinationZip:$('#intelDestZip').value.trim(), taxRate:pct('intelTaxRate'), targetMargin:pct('intelMargin')??.18,
+  minProfit:moneyInput('intelMinProfit')??2000, rebuiltDiscount:pct('intelRebuiltDiscount'), transportReserve:moneyInput('intelTransportReserve')??0,
+  bidMode:$('#intelBidMode').value, copartProfileConfirmed:$('#intelCopartProfile').checked,
+  manualRepair:repair===null?null:{base:repair,low:repair*.9,high:repair*1.15},
+  iaaFixedFee:iaaFixed??0, iaaFeePercent:iaaPct??0, bidIncrement:25
+ };
+}
+function intelligenceLot(x){return {source:x.source,lotKey:x.lotKey,vin:x.vin,year:x.year,make:x.make,model:x.model,trim:x.trim,mileage:x.mileageValue||x.mileage,damage:x.damage||x.condition,titleStatus:x.titleStatus,runDrive:x.runDrive,keys:x.keys,currentBid:x.currentBid,buyNow:x.buyNow,price:x.price,acv:x.acv,repairEstimate:x.repairEstimate,yardZip:x.yardZip,photo:x.photo};}
+function intelligenceDecisionClass(d=''){const s=String(d);if(/BUY NOW|STRONG/.test(s))return'good';if(/PASS|OVER CAP|MANUAL/.test(s))return'bad';return'warn'}
+function renderIntelMetric(label,value,detail='',cls=''){return `<div class="intel-metric"><div class="intel-label">${escapeHtml(label)}</div><div class="intel-value ${cls}">${escapeHtml(value)}</div>${detail?`<div class="intel-detail" title="${escapeHtml(detail)}">${escapeHtml(detail)}</div>`:''}</div>`}
+function providerSummary(providers={}){return Object.values(providers).map(p=>`${p.name||'Provider'}: ${p.ok?(p.count?`${p.count} comps`:'ready'):(p.status==='not_configured'?'not configured':p.status==='blocked'?'needs data':'unavailable')}`).join(' · ')}
+function intelligencePanel(x){
+ if(!x.apiLive)return'';
+ const r=INTELLIGENCE_BY_ID.get(x.id);
+ if(!r)return `<div class="intel-card"><div class="intel-head"><div class="intel-title">TRIAD Intelligence</div><button class="intel-analyze" data-intel-id="${escapeHtml(x.id)}" type="button">Analyze deal</button></div><div class="intel-grid">${renderIntelMetric('Est. hammer','—','Historical comps')}${renderIntelMetric('Auction fees','—','Account/profile')}${renderIntelMetric('Repair','—','Estimate / reserve')}${renderIntelMetric('Transport','—','Yard → destination')}${renderIntelMetric('Finished cost','—','All-in estimate')}${renderIntelMetric('Max bid','—','Risk-adjusted cap')}</div><div class="intel-foot"><div class="intel-status">Analyze runs historical auction comps and configured valuation/transport providers on demand.</div><span class="intel-decision warn">NOT ANALYZED</span></div></div>`;
+ if(r.loading)return `<div class="intel-card"><div class="intel-head"><div class="intel-title">TRIAD Intelligence</div><button class="intel-analyze" disabled type="button">Analyzing…</button></div><div class="intel-loading">Building historical hammer range, cost stack and bid discipline…</div></div>`;
+ if(r.error)return `<div class="intel-card"><div class="intel-head"><div class="intel-title">TRIAD Intelligence</div><button class="intel-analyze" data-intel-id="${escapeHtml(x.id)}" type="button">Retry</button></div><div class="intel-error">${escapeHtml(r.error)}</div></div>`;
+ const s=r.snapshot||{},e=s.economics||{},h=s.hammer||{},f=s.fees?.expected||{},rep=s.repair||{},tr=s.transport||{},m=s.market||{};
+ const cap=e.maxBid??e.provisionalMaxBid;
+ const capLabel=e.maxBid!==null&&e.maxBid!==undefined?'Max bid':e.provisionalMaxBid!==null&&e.provisionalMaxBid!==undefined?'Provisional cap':'Max bid';
+ const hammerDetail=h.estimate?`${moneyOrDash(h.low)}–${moneyOrDash(h.high)} · ${h.count||0} comps · ${h.confidence||'LOW'}`:`Need historical sold/ended comps`;
+ const feeDetail=f.known?`${f.provider||x.source} · ${f.confidence||'LOW'} confidence`:(f.caveat||'Fee profile required');
+ const repDetail=rep.available?`${moneyOrDash(rep.low)}–${moneyOrDash(rep.high)} · ${rep.provider||'estimate'}`:(rep.caveat||'Repair estimate required');
+ const trDetail=tr.available?`${moneyOrDash(tr.low)}–${moneyOrDash(tr.high)} · ${tr.provider||'transport'}`:(tr.caveat||'Destination/quote required');
+ const resaleDetail=m.available?`${moneyOrDash(m.low)}–${moneyOrDash(m.high)} · ${(m.providers||[]).join('+')||'ACV'}`:'Configure MarketCheck/CarsXE or use ACV provisionally';
+ const finishedDetail=e.expectedMargin!==null&&e.expectedMargin!==undefined?`Margin ${moneyOrDash(e.expectedMargin)} · ${pctOrDash(e.expectedMarginPct)}`:`Needs complete cost stack`;
+ const capDetail=cap!==null&&cap!==undefined?`${e.hardCap?'HARD CAP':'PROVISIONAL'} · target profit ${moneyOrDash(e.targetProfit)}`:`Need: ${(s.blockers||[]).slice(0,3).join(', ')||'more verified data'}`;
+ return `<div class="intel-card"><div class="intel-head"><div class="intel-title">TRIAD Intelligence</div><button class="intel-analyze" data-intel-id="${escapeHtml(x.id)}" type="button">Re-analyze</button></div><div class="intel-grid">${renderIntelMetric('Est. hammer',moneyOrDash(h.estimate),hammerDetail,h.confidence==='HIGH'?'good':'')}${renderIntelMetric('Auction fees',moneyOrDash(f.total),feeDetail)}${renderIntelMetric('Repair',moneyOrDash(rep.base),repDetail)}${renderIntelMetric('Transport',moneyOrDash(tr.base),trDetail)}${renderIntelMetric('Resale / value',moneyOrDash(m.value),resaleDetail)}${renderIntelMetric(capLabel,moneyOrDash(cap),capDetail,cap!==null&&cap!==undefined?'hot':'')}</div><div class="intel-foot"><div class="intel-status">Finished ${moneyOrDash(e.expectedFinished)} · ${finishedDetail} · ${escapeHtml(providerSummary(r.providers||{}))}</div><span class="intel-decision ${intelligenceDecisionClass(s.decision)}">${escapeHtml(s.decision||'INSUFFICIENT DATA')}</span></div></div>`;
+}
+async function analyzeDeal(id){
+ const x=activeListings().find(v=>v.id===id);if(!x||!x.apiLive)return;
+ INTELLIGENCE_BY_ID.set(id,{loading:true});render();
+ try{
+  const resp=await fetch('/api/intelligence',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lot:intelligenceLot(x),profile:intelligenceProfile()})});
+  const data=await resp.json().catch(()=>({}));if(!resp.ok||data.ok!==true)throw new Error(data.error||`Intelligence backend returned ${resp.status}`);
+  INTELLIGENCE_BY_ID.set(id,data);render();
+ }catch(err){INTELLIGENCE_BY_ID.set(id,{error:err.message||String(err)});render()}
 }
 function cardTemplate(x){
  const dist=x.distance==null?'Distance n/a':`${Math.round(x.distance)} mi`;
@@ -517,6 +607,7 @@ function cardTemplate(x){
    <div class="card-body">
     <div class="topline"><div><div class="title" title="${escapeHtml(x.title)}">${escapeHtml(x.title)}</div><div class="subtitle" title="${escapeHtml(x.subtitle)}">${escapeHtml(x.subtitle)}</div></div><div>${priceLabel?`<div class="price-label">${escapeHtml(priceLabel)}</div>`:''}<div class="price">${money(x.price)}</div><div class="distance">${dist}</div></div></div>
     <div class="midline"><div>${normalInfo}</div><div class="scorebox"><div class="scoretop"><span class="scorelabel">${scoreName}</span><span class="scoreval">${x.score}<small>/100</small></span></div><div class="scorebar"><i style="width:${x.score}%"></i></div>${scoreHint}</div></div>
+    ${intelligencePanel(x)}
     <div class="bottomline"><div class="seller"><strong>${escapeHtml(x.seller)}</strong> · ${escapeHtml(x.source)} · ${escapeHtml(x.city)} · ${escapeHtml(x.condition)} · ${escapeHtml(x.interchange)}</div><button class="view-btn" type="button" data-id="${escapeHtml(x.id)}">${action}</button></div>
    </div>
   </article>`;
@@ -531,6 +622,7 @@ function render(){
  $('#feedStatus').classList.toggle('live',yardLive);
  $('#feedStatus').innerHTML=yardLive?`<strong>${LIVE_LISTINGS.length} inventory rows loaded.</strong> This session is using recycler-supplied data only.`:'Prototype cards are active. Import a real yard CSV to switch the results feed to direct inventory.';
  $$('[data-id]').forEach(b=>b.addEventListener('click',()=>openItem(b.dataset.id)));
+ $$('.intel-analyze[data-intel-id]').forEach(b=>b.addEventListener('click',()=>analyzeDeal(b.dataset.intelId)));
  $$('#modeSegment button').forEach(b=>b.classList.toggle('active',b.dataset.mode===state.mode));
  $$('#viewSegment button').forEach(b=>b.classList.toggle('active',b.dataset.view===state.view));
  const main=$('#mainLayout');main.classList.remove('split','map-only');if(state.view==='split')main.classList.add('split');if(state.view==='map')main.classList.add('map-only');
@@ -565,7 +657,7 @@ async function importFeed(file){
  try{
   const text=await file.text();const raw=parseCSV(text);if(!raw.length)throw new Error('No inventory rows found.');
   const rows=raw.map(normalizeFeedRow).filter(Boolean);if(!rows.length)throw new Error('Could not identify part or yard columns.');
-  LIVE_LISTINGS=rows;FEED_MODE='yardlink';state.mode='Parts';state.sort='distance';$('#sortSelect').value='distance';recomputeDistances();render();
+  INTELLIGENCE_BY_ID.clear();LIVE_LISTINGS=rows;FEED_MODE='yardlink';state.mode='Parts';state.sort='distance';$('#sortSelect').value='distance';recomputeDistances();render();
  }catch(err){alert(`YardLink import failed: ${err.message}`)}
 }
 
@@ -593,7 +685,7 @@ async function loadLiveAuctions(options={}){
   const payload=await resp.json().catch(()=>({}));
   if(!resp.ok) throw new Error(payload.error||`Backend returned ${resp.status}`);
   const raw=Array.isArray(payload.lots)?payload.lots:pickArrayPayload(payload);
-  LIVE_LISTINGS=raw.map(normalizeSalvageLot).filter(Boolean);
+  INTELLIGENCE_BY_ID.clear();LIVE_LISTINGS=raw.map(normalizeSalvageLot).filter(Boolean);
   FEED_MODE='salvagealert';
   state.mode='Vehicles';
   state.sort='score';
@@ -650,7 +742,7 @@ $('#useLocationBtn').addEventListener('click',()=>{
  $('#useLocationBtn').textContent='Locating…';
  navigator.geolocation.getCurrentPosition(pos=>{userLocation={lat:pos.coords.latitude,lon:pos.coords.longitude};$('#locationInput').value='Current location';$('#useLocationBtn').textContent='Location active';recomputeDistances();render()},err=>{$('#useLocationBtn').textContent='Use my location';alert(`Could not use your location: ${err.message}`)},{enableHighAccuracy:false,timeout:10000,maximumAge:300000});
 });
-$('#clearFeedBtn').addEventListener('click',()=>{LIVE_LISTINGS=[];FEED_MODE='demo';userLocation=null;state={mode:'Everything',view:'list',query:'',radius:250,maxPrice:10000,sort:'score'};$('#sortSelect').value='score';$('#locationInput').value='McAllen, TX';$('#useLocationBtn').textContent='Use my location';render()});
+$('#clearFeedBtn').addEventListener('click',()=>{INTELLIGENCE_BY_ID.clear();LIVE_LISTINGS=[];FEED_MODE='demo';userLocation=null;state={mode:'Everything',view:'list',query:'',radius:250,maxPrice:10000,sort:'score'};$('#sortSelect').value='score';$('#locationInput').value='McAllen, TX';$('#useLocationBtn').textContent='Use my location';render()});
 $('#sourceBtn').addEventListener('click',e=>{e.stopPropagation();const wide=window.matchMedia('(min-width:1321px)').matches&&state.view==='list';if(wide){const main=$('#mainLayout');main.classList.toggle('sources-hidden');const visible=!main.classList.contains('sources-hidden');$('#sourceBtn').setAttribute('aria-expanded',String(visible));$('#sourcePopover').classList.remove('open')}else{const p=$('#sourcePopover');p.classList.toggle('open');$('#sourceBtn').setAttribute('aria-expanded',p.classList.contains('open'))}});
 document.addEventListener('click',e=>{if(!e.target.closest('.source-wrap')){$('#sourcePopover').classList.remove('open');$('#sourceBtn').setAttribute('aria-expanded','false')}});
 $('#hideSourceRail').addEventListener('click',()=>{$('#mainLayout').classList.add('sources-hidden');$('#sourceBtn').setAttribute('aria-expanded','false')});
