@@ -26,7 +26,7 @@ export default async function handler(req, res) {
   }
 
   const requested = String(req.body?.source || 'copart_us');
-  const pageSize = Math.max(1, Math.min(20, Number(req.body?.page_size || 10)));
+  const pageSize = Math.max(1, Math.min(30, Number(req.body?.page_size || 20)));
   const sources = requested === 'all'
     ? ['copart_us','iaai_us','govdeals_us']
     : [requested];
@@ -62,7 +62,13 @@ export default async function handler(req, res) {
 
       const found = extractLots(data);
       lots.push(...found.map(x => ({ ...x, source: x?.source || source })));
-      sourceStatus.push({ source, ok: true, count: found.length, status: upstream.status });
+      sourceStatus.push({
+        source,
+        ok: true,
+        count: found.length,
+        status: upstream.status,
+        pagination: data?.pagination || data?.meta || data?.page || null
+      });
     } catch (err) {
       sourceStatus.push({ source, ok: false, error: err.message });
     }
