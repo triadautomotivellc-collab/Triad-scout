@@ -72,6 +72,23 @@ export default async function handler(req,res){
 
   const partQuery=parsePartQuery(queryText,vehicle);
   const licensedInterchange=Array.isArray(body.licensed_interchange)?body.licensed_interchange.slice(0,10000):[];
+
+  if(!partQuery.partType){
+    return res.status(200).json({
+      ok:true,
+      version:PARTS_ENGINE_VERSION,
+      intent:'vehicle_only',
+      query:partQuery,
+      interchange:{resolved:false,group_ids:[],compatible_vehicle_count:0,compatible_vehicles:[],sources:[],confidence:0},
+      providers:[
+        {id:'yardlink',name:'YardLink Direct',ok:false,status:'not_called',count:0,message:'No part type detected; recycler inventory search was not needed.'},
+        {id:'licensed_interchange',name:'Licensed Interchange Catalog',ok:false,status:'not_called',count:0,message:'Add a part name to activate interchange lookup.'}
+      ],
+      parts:[],
+      cheapest:null
+    });
+  }
+
   const interchange=resolveInterchange(partQuery,licensedInterchange);
   const maxPrice=Math.max(0,Math.min(100000,Number(body.max_price)||100000));
   const profile={

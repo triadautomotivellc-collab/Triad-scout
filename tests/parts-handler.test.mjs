@@ -33,3 +33,17 @@ test('authorized connector payload includes resolved interchange groups',async()
  assert.equal(res.statusCode,200);assert.ok(seen.length>=1);assert.deepEqual(seen[0].interchange.group_ids,['G1']);assert.equal(res.payload.parts.length,1);
  delete process.env.HOLLANDER_CONNECTOR_URL;delete process.env.HOLLANDER_CONNECTOR_KEY;
 });
+
+
+test('vehicle-only query returns without calling licensed parts connectors',async()=>{
+ let called=false;
+ globalThis.fetch=async()=>{called=true;throw new Error('connector should not be called')};
+ const req={method:'POST',body:{query:'camaro',vehicle:{},yardlink_inventory:[],licensed_interchange:[]}};
+ const res=resMock();
+ await handler(req,res);
+ assert.equal(res.statusCode,200);
+ assert.equal(res.payload.intent,'vehicle_only');
+ assert.equal(res.payload.query.partType,'');
+ assert.deepEqual(res.payload.parts,[]);
+ assert.equal(called,false);
+});

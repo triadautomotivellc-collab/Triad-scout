@@ -100,3 +100,22 @@ test('part query infers Grand Cherokee model from the search text',()=>{
  assert.equal(q.vehicle.model,'Grand Cherokee');
  assert.equal(q.side,'LH');
 });
+
+
+test('vehicle-only Camaro query is not misclassified as a part',()=>{
+ const q=parsePartQuery('camaro',{});
+ assert.equal(q.partType,'');
+ assert.equal(q.recognizedPart,false);
+ assert.equal(q.intent,'vehicle_or_unknown');
+ assert.equal(q.vehicle.make,'CHEVROLET');
+ assert.equal(q.vehicle.model,'Camaro');
+});
+
+test('vehicle plus explicit part still activates parts sourcing',()=>{
+ const q=parsePartQuery('2018 camaro ss left door',{});
+ assert.equal(q.partType,'Door Assembly');
+ assert.equal(q.recognizedPart,true);
+ assert.equal(q.vehicle.make,'CHEVROLET');
+ assert.equal(q.vehicle.model,'Camaro');
+ assert.equal(q.side,'LH');
+});

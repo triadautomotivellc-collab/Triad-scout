@@ -1,0 +1,29 @@
+TRIAD SCOUT v0.8.2 — DONOR VEHICLES VISIBLE IN PARTS MODE
+==========================================================
+
+RESULT: PASS
+
+Automated suite:
+78 passed
+0 failed
+
+What this fixes:
+- Parts mode now shows live matching donor VEHICLE cards in Unified Results.
+- Vehicle-only searches such as "camaro" are no longer misclassified as a part named "camaro".
+- Vehicle-only searches do not waste licensed recycler/interchange connector calls.
+- The Interchange card now says "Add a part to search" for vehicle-only queries.
+- Explicit parts queries still activate interchange sourcing:
+    "2018 camaro ss left door" -> Camaro SS + Door Assembly + LH
+- Parts mode groups results:
+    Compatible Parts
+    Matching Donor Vehicles
+- Donor cars remain visible even when there are zero direct recycler part matches.
+- Existing v0.8 auction fee, intelligence, YardLink, interchange, search, and source tests remain green.
+
+Validation performed:
+- Node syntax checks: PASS
+- index.html inline JavaScript validation: PASS
+- Automated regression suite: 78/78 PASS
+
+Live-provider note:
+The suite validates our code and mocked API contracts. Real SalvageAlert inventory still depends on the provider's live data at deployment time.

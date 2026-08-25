@@ -22,3 +22,15 @@ test('parts search no longer sends fixed Silverado context',()=>{
  assert.match(html,/vehicle:\{\}/);
  assert.match(html,/vehicleSearchText\(q\)/);
 });
+
+
+test('Parts mode renders matching donor vehicles in Unified Results',()=>{
+ assert.match(html,/Matching Donor Vehicles/);
+ assert.match(html,/filteredDonorResults\(\)/);
+ assert.match(html,/verified part.*donor vehicle/s);
+});
+
+test('vehicle-only Parts query prompts for a part instead of treating the car model as a part',()=>{
+ assert.match(html,/Add a part to search/);
+ assert.match(html,/Vehicle-only query/);
+});

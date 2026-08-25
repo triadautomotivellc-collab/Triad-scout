@@ -173,7 +173,13 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .command-actions button{cursor:pointer}.command-actions button.primary{background:var(--red);border-color:var(--red);color:#fff}.command-actions button:hover{border-color:#4a515d}
 .fee-lines{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:8px}.fee-cell{background:#0a0c0f;border:1px solid #20242a;border-radius:9px;padding:7px}.fee-cell span{display:block;color:#79818d;font-size:9px;text-transform:uppercase;letter-spacing:.07em}.fee-cell b{display:block;font-size:13px;margin-top:2px;font-variant-numeric:tabular-nums}
 .interchange-strip{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.interchange-chip{font-size:10px;border:1px solid #30353d;border-radius:999px;padding:4px 7px;color:#bac0c9;background:#15181d}.interchange-chip.good{border-color:rgba(85,217,139,.35);color:#73dda0;background:rgba(85,217,139,.07)}
-.parts-fit{color:#6fe09d;font-weight:700}.part-grade{font-size:10px;border:1px solid #333942;border-radius:6px;padding:2px 5px;color:#c4c9d1}.part-price-detail{font-size:10px;color:#87909c;margin-top:3px}.parts-source-note{font-size:10px;color:#737b87;margin-top:6px;line-height:1.35}
+.parts-fit{color:#6fe09d;font-weight:700}.part-grade{font-size:10px;border:1px solid #333942;border-radius:6px;padding:2px 5px;color:#c4c9d1}.part-price-detail{font-size:10px;color:#87909c;margin-top:3px}.parts-source-note{font-size:10px;color:#737b87;margin-top:6px;line-height:1.35}.results-group{margin:0 0 18px}
+.results-group-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:4px 2px 10px;padding-top:4px}
+.results-group-title{font-size:15px;font-weight:800;color:#eef1f6}
+.results-group-meta{font-size:11px;color:#7f8997}
+.results-group-empty{border:1px dashed #2b313a;border-radius:12px;padding:18px;color:#8d97a5;background:#0b0d10}
+.donor-note{font-size:10px;color:#77808d;margin-top:3px}
+
 @media(max-width:1050px){.command-deck{grid-template-columns:1fr}.command-card{padding:11px}}
 
 /* YardLink direct-feed MVP */
@@ -223,7 +229,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
    <button type="button" data-mode="Parts" class="active">Parts</button>
    <button type="button" data-mode="Everything">Everything</button>
   </div>
-  <span class="prototype-note">Parts intelligence · query-driven vehicle context + interchange sourcing</span>
+  <span class="prototype-note">Parts intelligence · donor vehicles + interchange sourcing</span>
  </div>
  <div class="segment view-segment" id="viewSegment" aria-label="View mode">
   <button type="button" data-view="list" class="active">List</button>
@@ -571,6 +577,18 @@ function filtered(){
  else arr.sort((a,b)=>b.score-a.score);
  return arr;
 }
+function filterAndSortResults(arr,{applyQuery=true}={}){
+ const q=state.query.trim().toLowerCase();
+ let out=[...arr];
+ if(applyQuery&&q)out=out.filter(x=>[x.title,x.subtitle,x.source,x.city,x.seller,x.interchange,x.stock,x.vin].join(' ').toLowerCase().includes(q));
+ out=out.filter(x=>(x.distance==null||x.distance<=state.radius)&&(x.price<=0||(x.price>=state.minPrice&&x.price<=state.maxPrice)));
+ if(state.sort==='price')out.sort((a,b)=>(a.price||Number.MAX_SAFE_INTEGER)-(b.price||Number.MAX_SAFE_INTEGER));
+ else if(state.sort==='distance')out.sort((a,b)=>(a.distance??999999)-(b.distance??999999));
+ else out.sort((a,b)=>b.score-a.score);
+ return out;
+}
+function filteredPartResults(){return filterAndSortResults(PART_RESULTS,{applyQuery:true})}
+function filteredDonorResults(){return filterAndSortResults(LIVE_LISTINGS,{applyQuery:false})}
 function normalizePartApiResult(x,i){
  const landed=Number(x?.landed?.total)||Number(x.price)||0;
  const donor=[x.year,x.make,x.model,x.trim,x.engine].filter(Boolean).join(' · ');
@@ -603,14 +621,23 @@ function updateTopDeck(){
  $('#topPartCost').textContent=cheapest?money(cheapest.total||cheapest.price):'—';
  $('#topPartMatches').textContent=String(PART_RESULTS.length);
  $('#rebuildCommandMain').textContent=cheapest?`${money(cheapest.total||cheapest.price)} cheapest verified part`:'No verified part yet';
- $('#partsCommandMain').textContent=PARTS_META?.query?.partType||'Search a part';
+ const detectedPart=PARTS_META?.query?.partType||'';
+ const vehicleOnly=PARTS_META?.intent==='vehicle_only'||(!detectedPart&&PARTS_SEARCHED);
+ $('#partsCommandMain').textContent=vehicleOnly?'Add a part to search':(detectedPart||'Search a part');
+ $('#partsCommandSub').textContent=vehicleOnly
+   ? 'Matching donor vehicles are shown below. Add a part name such as engine, transmission, door, headlamp, hood, or turbo to activate interchange sourcing.'
+   : 'Licensed interchange data expands compatible donor years/models; inventory is ranked by landed cost.';
  const interchange=PARTS_META?.interchange;
  const chips=[];
- if(interchange?.resolved){chips.push(`<span class="interchange-chip good">${escapeHtml((interchange.group_ids||[]).slice(0,3).join(', ')||'Interchange resolved')}</span>`);chips.push(`<span class="interchange-chip">${Number(interchange.compatible_vehicle_count)||0} compatible donors</span>`)}else chips.push('<span class="interchange-chip">No licensed interchange resolved</span>');
+ if(vehicleOnly) chips.push('<span class="interchange-chip">Vehicle-only query</span>');
+ else if(interchange?.resolved){chips.push(`<span class="interchange-chip good">${escapeHtml((interchange.group_ids||[]).slice(0,3).join(', ')||'Interchange resolved')}</span>`);chips.push(`<span class="interchange-chip">${Number(interchange.compatible_vehicle_count)||0} compatible donors</span>`)}
+ else chips.push('<span class="interchange-chip">No licensed interchange resolved</span>');
  $('#interchangeStrip').innerHTML=chips.join('');
  const providers=PARTS_META?.providers||[];
  const summary=providers.map(p=>`${p.name}: ${p.ok?(p.count||0)+' results':p.status}`).join(' · ');
- $('#partsProviderStatus').textContent=summary||'Hollander/EDEN and Car-Part adapters remain disabled until licensed/authorized access is configured.';
+ $('#partsProviderStatus').textContent=vehicleOnly
+   ? 'No recycler/interchange calls made because no part type was detected.'
+   : (summary||'Hollander/EDEN and Car-Part adapters remain disabled until licensed/authorized access is configured.');
 }
 async function updateTopAuctionFee(){
  const donor=[...LIVE_LISTINGS].filter(x=>x.kind==='VEHICLE'&&Number(x.price)>0).sort((a,b)=>a.price-b.price)[0];
@@ -712,9 +739,29 @@ function cardTemplate(x){
   </article>`;
 }
 function render(){
- const items=filtered();
- $('#cards').innerHTML=items.length?items.map(cardTemplate).join(''):`<div class="empty">${state.mode==='Parts'?(PARTS_SEARCHED?'No verified recycled-part matches found. Load a YardLink feed, import licensed interchange data, or configure an authorized recycler connector.':'Search a part to start interchange + donor sourcing.'):(AUCTION_SEARCHED?'No verified live-auction vehicles matched this search.':'Search to load live auction vehicles.')}</div>`;
- $('#resultsMeta').textContent=state.mode==='Parts'?`${items.length} verified part${items.length===1?'':'s'} · cheapest compatible inventory first`:state.mode==='Vehicles'?`${items.length} verified live vehicle${items.length===1?'':'s'}`:`${items.length} combined verified result${items.length===1?'':'s'}`;
+ let items=[];
+ if(state.mode==='Parts'){
+  const partItems=filteredPartResults();
+  const donorItems=filteredDonorResults();
+  items=[...partItems,...donorItems];
+  const hasPartType=Boolean(PARTS_META?.query?.partType);
+  const blocks=[];
+  if(hasPartType){
+   blocks.push(`<section class="results-group"><div class="results-group-head"><div><div class="results-group-title">Compatible Parts</div><div class="donor-note">Verified fitment and landed-cost ranking</div></div><div class="results-group-meta">${partItems.length} match${partItems.length===1?'':'es'}</div></div>${partItems.length?partItems.map(cardTemplate).join(''):`<div class="results-group-empty">No verified recycled-part matches yet. Load YardLink inventory or licensed interchange data to populate direct part results.</div>`}</section>`);
+  }
+  if(AUCTION_SEARCHED||donorItems.length){
+   blocks.push(`<section class="results-group"><div class="results-group-head"><div><div class="results-group-title">Matching Donor Vehicles</div><div class="donor-note">Live auction vehicles matching the vehicle context from your search</div></div><div class="results-group-meta">${donorItems.length} verified</div></div>${donorItems.length?donorItems.map(cardTemplate).join(''):`<div class="results-group-empty">No verified donor vehicles matched this vehicle search.</div>`}</section>`);
+  }
+  if(!blocks.length) blocks.push(`<div class="empty">Search a vehicle or a part. Vehicle-only searches show donor cars; adding a part activates interchange + recycler sourcing.</div>`);
+  $('#cards').innerHTML=blocks.join('');
+  $('#resultsMeta').textContent=hasPartType
+    ? `${partItems.length} verified part${partItems.length===1?'':'s'} · ${donorItems.length} donor vehicle${donorItems.length===1?'':'s'}`
+    : `${donorItems.length} verified donor vehicle${donorItems.length===1?'':'s'} · add a part name for interchange sourcing`;
+ } else {
+  items=filtered();
+  $('#cards').innerHTML=items.length?items.map(cardTemplate).join(''):`<div class="empty">${state.mode==='Vehicles'?(AUCTION_SEARCHED?'No verified live-auction vehicles matched this search.':'Search to load live auction vehicles.'):'No verified results found.'}</div>`;
+  $('#resultsMeta').textContent=state.mode==='Vehicles'?`${items.length} verified live vehicle${items.length===1?'':'s'}`:`${items.length} combined verified result${items.length===1?'':'s'}`;
+ }
  $$('[data-id]').forEach(b=>b.addEventListener('click',()=>openItem(b.dataset.id)));
  $$('.intel-analyze[data-intel-id]').forEach(b=>b.addEventListener('click',()=>analyzeDeal(b.dataset.intelId)));
  $$('#modeSegment button').forEach(b=>b.classList.toggle('active',b.dataset.mode===state.mode));
