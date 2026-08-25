@@ -92,6 +92,13 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .info{display:flex;flex-wrap:wrap;gap:7px 12px;min-width:0}.info span{font-size:12px;color:#adb3bc;white-space:nowrap}.info b{font-weight:600;color:#e2e5e9}
 .fit{display:inline-flex!important;align-items:center;gap:6px;color:#ccd1d7!important}.fit:before{content:"✓";display:inline-flex;width:18px;height:18px;border-radius:50%;align-items:center;justify-content:center;background:rgba(85,217,139,.11);color:var(--green);font-weight:800;font-size:11px}
 .scorebox{min-width:0}.scoretop{display:flex;align-items:baseline;justify-content:space-between}.scorelabel{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#737b87}.scoreval{font-weight:800;font-size:18px;color:#ff4050;font-variant-numeric:tabular-nums}.scoreval small{font-size:11px;color:#737b87;font-weight:600}.scorebar{height:5px;background:#242832;border-radius:99px;overflow:hidden;margin-top:5px}.scorebar i{display:block;height:100%;background:linear-gradient(90deg,#d8172a,#ff4050);border-radius:99px}
+.scorehint{margin-top:6px;font-size:10.5px;color:#818996;line-height:1.35}
+.auction-metrics{display:flex;gap:7px 12px;flex-wrap:wrap;align-items:center}
+.auction-metrics span{font-size:11px;color:#a4acb9;white-space:nowrap}
+.auction-metrics b{color:#f0f2f6;font-weight:700;font-variant-numeric:tabular-nums}
+.price-label{font-size:9px;text-transform:uppercase;letter-spacing:.09em;color:#858d99;text-align:right;margin-bottom:1px}
+.score-confidence{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#8b93a0;margin-left:6px}
+
 .bottomline{display:flex;align-items:center;justify-content:space-between;gap:12px}.seller{min-width:0;font-size:12px;color:#858c97;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.seller strong{color:#cdd1d7;font-weight:600}.view-btn{border:1px solid #343942;background:#191c21;height:34px;border-radius:9px;padding:0 11px;font-size:12px;font-weight:650;cursor:pointer;white-space:nowrap}.view-btn:hover{background:#22262c}.landed{font-variant-numeric:tabular-nums}.landed strong{font-size:15px;color:#f2f3f5}
 
 .source-rail{position:sticky;top:132px;align-self:start;max-height:calc(100vh - 154px);overflow:hidden;background:rgba(16,18,22,.72);border:1px solid var(--line);border-radius:var(--radius);display:flex;flex-direction:column}
@@ -351,40 +358,130 @@ function pickArrayPayload(payload){
  }
  return [];
 }
+function truthyFlag(v){
+ if(v===true||v===1)return true;
+ if(v===false||v===0)return false;
+ const s=String(v??'').trim().toLowerCase();
+ if(!s)return null;
+ if(['yes','y','true','1','run & drive','run and drive','runs and drives','present','available'].includes(s))return true;
+ if(['no','n','false','0','not run','no keys','missing'].includes(s))return false;
+ return null;
+}
+function firstImageUrl(value,depth=0,context=''){
+ if(value==null||depth>5)return '';
+ if(typeof value==='string'){
+  const s=value.trim();
+  if(/^https?:\/\//i.test(s) && (context||/\.(jpe?g|png|webp|gif)(\?|$)/i.test(s))) return s;
+  return '';
+ }
+ if(Array.isArray(value)){
+  for(const item of value){const u=firstImageUrl(item,depth+1,context||'image');if(u)return u}
+  return '';
+ }
+ if(typeof value==='object'){
+  const preferred=['thumbnail_url','thumbnail','primary_image','primary_photo','image_url','photo_url','image','photo','hero_image','main_image','preview'];
+  for(const k of preferred){
+   if(k in value){const u=firstImageUrl(value[k],depth+1,'image');if(u)return u}
+  }
+  for(const [k,v] of Object.entries(value)){
+   if(/image|photo|thumb|picture/i.test(k)){const u=firstImageUrl(v,depth+1,'image');if(u)return u}
+  }
+ }
+ return '';
+}
+function auctionOpportunityScore({basis,acv,repair,damage,titleStatus,runDrive,keys,basisType}){
+ let economics=25, condition=8, utility=6, confidence='LOW';
+ const reasons=[];
+ if(acv>0 && basis>0){
+  const combined=basis + Math.max(0,repair||0);
+  const ratio=combined/acv;
+  if(ratio<=0.35)economics=70;
+  else if(ratio<=0.45)economics=64;
+  else if(ratio<=0.55)economics=58;
+  else if(ratio<=0.65)economics=51;
+  else if(ratio<=0.75)economics=43;
+  else if(ratio<=0.85)economics=34;
+  else if(ratio<=0.95)economics=25;
+  else if(ratio<=1.05)economics=17;
+  else if(ratio<=1.20)economics=9;
+  else economics=3;
+  confidence=repair>0?'HIGH':'MED';
+  reasons.push(`${Math.round(ratio*100)}% of ACV incl. listed repair estimate`);
+ }else if(acv>0 && basis>0){
+  confidence='MED';
+ }
+ const d=String(damage||'').toLowerCase();
+ if(/hail|minor dent|scratches|cosmetic/i.test(d)) condition=15;
+ else if(/rear|side|front end|front|side damage/i.test(d)) condition=10;
+ else if(/mechanical|undercarriage/i.test(d)) condition=6;
+ else if(/flood|water|burn|fire|biohazard|rollover|all over/i.test(d)) condition=1;
+ else condition=8;
+
+ const title=String(titleStatus||'').toLowerCase();
+ if(/clean|clear/i.test(title)) utility+=4;
+ else if(/parts only|certificate of destruction|non-repairable|junk/i.test(title)) utility-=4;
+
+ if(runDrive===true) utility+=4;
+ else if(runDrive===false) utility-=2;
+ if(keys===true) utility+=2;
+ else if(keys===false) utility-=1;
+
+ let score=Math.round(economics+condition+Math.max(0,Math.min(15,utility)));
+ score=Math.max(10,Math.min(100,score));
+ if(basisType==='CURRENT BID'){
+  score=Math.min(score,89);
+  confidence=confidence==='HIGH'?'MED':confidence;
+  reasons.push('current bid can still change');
+ }
+ if(!repair) reasons.push('repair estimate unavailable');
+ return {score,confidence,reason:reasons.join(' · ')||'limited auction pricing data'};
+}
 function normalizeSalvageLot(lot,i){
- const year=firstValue(lot,['year','vehicle.year']);
+ const year=firstValue(lot,['year','model_year','vehicle.year','vehicle.model_year']);
  const make=firstValue(lot,['make','vehicle.make'])||'';
  const model=firstValue(lot,['model','vehicle.model'])||'';
  const trim=firstValue(lot,['trim','vehicle.trim'])||'';
  const vin=firstValue(lot,['vin','vehicle.vin'])||'';
  const sourceRaw=String(firstValue(lot,['source','auction_source','provider'])||'SalvageAlert');
  const source=sourceRaw.toLowerCase().includes('copart')?'Copart':sourceRaw.toLowerCase().includes('iaa')?'IAA':sourceRaw.toLowerCase().includes('gov')?'GovDeals':sourceRaw;
- const lotKey=firstValue(lot,['lot_key','lot_number','lot_id','id'])||`live-${i}`;
- const damage=firstValue(lot,['primary_damage','damage','damage_description','loss_type'])||'Damage details in listing';
- const odo=firstValue(lot,['odometer','mileage','miles','vehicle.odometer']);
- const yardObj=firstValue(lot,['yard','location']);
- const yardName=typeof yardObj==='string'?yardObj:(yardObj?.name||yardObj?.title||'Auction yard');
- const city=firstValue(lot,['city','yard_city','location.city','yard.city'])||'';
- const st=firstValue(lot,['state','yard_state','location.state','yard.state'])||'';
- const priceRaw=firstValue(lot,['buy_now_price','buy_now','price','current_bid','bid','high_bid','sale_price']);
- const price=num(priceRaw)||0;
- const acv=num(firstValue(lot,['acv','actual_cash_value','estimated_value']))||price;
+ const lotKey=firstValue(lot,['lot_key','lot_number','lot_id','id','stock_number'])||`live-${i}`;
+ const primaryDamage=firstValue(lot,['primary_damage','damage.primary','damage','damage_description','loss_type'])||'Damage details in listing';
+ const secondaryDamage=firstValue(lot,['secondary_damage','damage.secondary'])||'';
+ const damage=[primaryDamage,secondaryDamage].filter(Boolean).join(' / ');
+ const odo=firstValue(lot,['odometer','mileage','miles','vehicle.odometer','vehicle.mileage']);
+ const yardObj=firstValue(lot,['yard','location','storage_location']);
+ const yardName=typeof yardObj==='string'?yardObj:(yardObj?.name||yardObj?.title||yardObj?.branch||'Auction yard');
+ const city=firstValue(lot,['city','yard_city','location.city','yard.city','storage_location.city'])||'';
+ const st=firstValue(lot,['state','yard_state','location.state','yard.state','storage_location.state'])||'';
+ const currentBid=num(firstValue(lot,['current_bid','bid','high_bid','bid_amount','pricing.current_bid','pricing.bid']))||0;
+ const buyNow=num(firstValue(lot,['buy_now_price','buy_now','buyNow','buy_it_now','pricing.buy_now']))||0;
+ const acv=num(firstValue(lot,['acv','actual_cash_value','pre_loss_value','preloss_value','pre_loss','estimated_value','retail_value','pricing.acv']))||0;
+ const repair=num(firstValue(lot,['repair_estimate','repair_cost','estimated_repair_cost','repair_value','repair_estimate_amount','pricing.repair_estimate']))||0;
+ const basis=buyNow>0?buyNow:currentBid;
+ const basisType=buyNow>0?'BUY NOW':currentBid>0?'CURRENT BID':'CALL';
+ const projectCost=(basis||0)+(repair||0);
+ const titleStatus=firstValue(lot,['title_type','title_status','title','document_type'])||'';
+ const runDrive=truthyFlag(firstValue(lot,['run_and_drive','run_drive','runs_drives','runAndDrive','condition.run_and_drive']));
+ const keys=truthyFlag(firstValue(lot,['keys','has_keys','key_status','keys_present']));
  const seller=firstValue(lot,['seller','seller_name','owner'])||yardName||source;
- const url=firstValue(lot,['listing_url','url','source_url'])||'';
- const photos=firstValue(lot,['photos','images','image_urls']);
- let photo='';
- if(Array.isArray(photos)&&photos.length){
-  const p=photos[0]; photo=typeof p==='string'?p:(p?.url||p?.src||'');
- } else photo=firstValue(lot,['photo','image','thumbnail','thumbnail_url','image_url'])||'';
+ const url=firstValue(lot,['listing_url','url','source_url','canonical_url'])||'';
+ let photo=firstImageUrl(firstValue(lot,['photos','images','image_urls','photo_urls','media','gallery']));
+ if(!photo) photo=firstImageUrl(lot,0,'');
+ const latRaw=firstValue(lot,['latitude','lat','location.latitude','location.lat','yard.latitude','yard.lat']);
+ const lonRaw=firstValue(lot,['longitude','lon','lng','location.longitude','location.lon','location.lng','yard.longitude','yard.lon','yard.lng']);
+ const lat=latRaw==null?null:num(latRaw), lon=lonRaw==null?null:num(lonRaw);
  const title=[year,make,model,trim].filter(Boolean).join(' ')||`${source} lot ${lotKey}`;
- const subtitle=[damage, odo?`${odo} mi`:'', vin?`VIN ${String(vin).slice(0,8)}…`:''].filter(Boolean).join(' · ');
+ const subtitle=[damage, odo?`${odo} mi`:'', titleStatus?String(titleStatus):'', vin?`VIN ${String(vin).slice(0,8)}…`:''].filter(Boolean).join(' · ');
+ const scored=auctionOpportunityScore({basis,acv,repair,damage,titleStatus,runDrive,keys,basisType});
  return {
-  id:`salvage-${sourceRaw}-${lotKey}-${i}`, kind:'VEHICLE', score:80, title, subtitle,
-  source, price, total:price, distance:null, city:[city,st].filter(Boolean).join(', ')||yardName||'Auction location',
+  id:`salvage-${sourceRaw}-${lotKey}-${i}`, kind:'VEHICLE', score:scored.score, scoreConfidence:scored.confidence, scoreReason:scored.reason,
+  title, subtitle, source, price:basis, priceLabel:basisType, currentBid, buyNow, acv, repairEstimate:repair, projectCost,
+  total:projectCost||basis, distance:null, city:[city,st].filter(Boolean).join(', ')||yardName||'Auction location',
   seller:String(seller), condition:String(damage), mileage:odo?String(odo):'Mileage n/a',
   fit:'Live auction vehicle', interchange:vin?`VIN ${vin}`:`Lot ${lotKey}`,
   photo:validHttpUrl(photo)?photo:placeholder(title), url:validHttpUrl(url)?url:'',
-  apiLive:true, lotKey:String(lotKey), vin:String(vin||''), raw:lot
+  apiLive:true, lotKey:String(lotKey), vin:String(vin||''), raw:lot, lat, lon,
+  titleStatus:String(titleStatus||''), runDrive, keys
  };
 }
 
@@ -403,12 +500,23 @@ function filtered(){
 function cardTemplate(x){
  const dist=x.distance==null?'Distance n/a':`${Math.round(x.distance)} mi`;
  const action=x.apiLive?(x.url?'Open auction →':'Live auction details →'):x.direct?(x.url?'Open yard listing →':x.address?'Directions →':'Yard details →'):'View listing →';
+ const priceLabel=x.apiLive?(x.priceLabel||'AUCTION PRICE'):'';
+ const auctionMetrics=x.apiLive?`<div class="auction-metrics">
+   ${x.currentBid>0?`<span>Bid <b>${money(x.currentBid)}</b></span>`:''}
+   ${x.buyNow>0?`<span>Buy now <b>${money(x.buyNow)}</b></span>`:''}
+   ${x.acv>0?`<span>ACV <b>${money(x.acv)}</b></span>`:''}
+   ${x.repairEstimate>0?`<span>Repair est. <b>${money(x.repairEstimate)}</b></span>`:''}
+   ${x.projectCost>0?`<span>Buy + repair <b>${money(x.projectCost)}</b></span>`:''}
+  </div>`:'';
+ const normalInfo=x.apiLive?auctionMetrics:`<div class="info"><span class="fit">${escapeHtml(x.fit)}</span><span><b>${escapeHtml(x.source)}</b></span><span>${escapeHtml(x.city)}</span><span>${escapeHtml(x.mileage)}</span><span class="landed">Landed <strong>${money(x.total)}</strong></span></div>`;
+ const scoreName=x.apiLive?'TRIAD Deal Score':'TRIAD Score';
+ const scoreHint=x.apiLive?`<div class="scorehint" title="${escapeHtml(x.scoreReason||'')}">${escapeHtml(x.scoreReason||'Opportunity rating from auction economics')} <span class="score-confidence">${escapeHtml(x.scoreConfidence||'')}</span></div>`:'';
  return `<article class="card${x.direct?' direct-feed':''}">
    <div class="photo"><img src="${escapeHtml(x.photo)}" alt="${escapeHtml(x.title)}" loading="lazy" onerror="this.src='${placeholder('TRIAD SCOUT')}'"><span class="kind">${x.apiLive?'LIVE AUCTION':x.direct?'DIRECT FEED':x.kind}</span></div>
    <div class="card-body">
-    <div class="topline"><div><div class="title" title="${escapeHtml(x.title)}">${escapeHtml(x.title)}</div><div class="subtitle" title="${escapeHtml(x.subtitle)}">${escapeHtml(x.subtitle)}</div></div><div><div class="price">${money(x.price)}</div><div class="distance">${dist}</div></div></div>
-    <div class="midline"><div class="info"><span class="fit">${escapeHtml(x.fit)}</span><span><b>${escapeHtml(x.source)}</b></span><span>${escapeHtml(x.city)}</span><span>${escapeHtml(x.mileage)}</span><span class="landed">Landed <strong>${money(x.total)}</strong></span></div><div class="scorebox"><div class="scoretop"><span class="scorelabel">TRIAD Score</span><span class="scoreval">${x.score}<small>/100</small></span></div><div class="scorebar"><i style="width:${x.score}%"></i></div></div></div>
-    <div class="bottomline"><div class="seller"><strong>${escapeHtml(x.seller)}</strong> · ${escapeHtml(x.condition)} · ${escapeHtml(x.interchange)}${x.phone?` · ${escapeHtml(x.phone)}`:''}</div><button class="view-btn" type="button" data-id="${escapeHtml(x.id)}">${action}</button></div>
+    <div class="topline"><div><div class="title" title="${escapeHtml(x.title)}">${escapeHtml(x.title)}</div><div class="subtitle" title="${escapeHtml(x.subtitle)}">${escapeHtml(x.subtitle)}</div></div><div>${priceLabel?`<div class="price-label">${escapeHtml(priceLabel)}</div>`:''}<div class="price">${money(x.price)}</div><div class="distance">${dist}</div></div></div>
+    <div class="midline"><div>${normalInfo}</div><div class="scorebox"><div class="scoretop"><span class="scorelabel">${scoreName}</span><span class="scoreval">${x.score}<small>/100</small></span></div><div class="scorebar"><i style="width:${x.score}%"></i></div>${scoreHint}</div></div>
+    <div class="bottomline"><div class="seller"><strong>${escapeHtml(x.seller)}</strong> · ${escapeHtml(x.source)} · ${escapeHtml(x.city)} · ${escapeHtml(x.condition)} · ${escapeHtml(x.interchange)}</div><button class="view-btn" type="button" data-id="${escapeHtml(x.id)}">${action}</button></div>
    </div>
   </article>`;
 }
@@ -441,8 +549,8 @@ function openItem(id){
  if(x.apiLive&&x.url){window.open(x.url,'_blank','noopener,noreferrer');return}
  if(x.direct&&x.url){window.open(x.url,'_blank','noopener,noreferrer');return}
  if(x.direct&&x.address){window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(x.address)}`,'_blank','noopener,noreferrer');return}
- $('#demoTitle').textContent=x.direct?'Recycler inventory details':'Prototype listing';
- $('#demoModal').querySelector('p').innerHTML=x.direct?`<strong>${escapeHtml(x.seller)}</strong><br>${escapeHtml(x.address||x.city)}${x.phone?`<br>${escapeHtml(x.phone)}`:''}<br><br>This inventory came from the recycler CSV imported into this browser session.`:'This card is demo data from the original TRIAD Scout concept build. The production button will open the verified source listing after the corresponding connector is implemented.';
+ $('#demoTitle').textContent=x.apiLive?'Live auction details':x.direct?'Recycler inventory details':'Prototype listing';
+ $('#demoModal').querySelector('p').innerHTML=x.apiLive?`<strong>${escapeHtml(x.title)}</strong><br>${escapeHtml(x.source)} · ${escapeHtml(x.city)}<br><br>${x.currentBid>0?`Current bid: <strong>${money(x.currentBid)}</strong><br>`:''}${x.buyNow>0?`Buy now: <strong>${money(x.buyNow)}</strong><br>`:''}${x.acv>0?`ACV / pre-loss value: <strong>${money(x.acv)}</strong><br>`:''}${x.repairEstimate>0?`Listed repair estimate: <strong>${money(x.repairEstimate)}</strong><br>`:''}<br>TRIAD Deal Score: <strong>${x.score}/100</strong><br>${escapeHtml(x.scoreReason||'')}<br><br>No canonical listing URL was included in this API record.`:x.direct?`<strong>${escapeHtml(x.seller)}</strong><br>${escapeHtml(x.address||x.city)}${x.phone?`<br>${escapeHtml(x.phone)}`:''}<br><br>This inventory came from the recycler CSV imported into this browser session.`:'This card is demo data from the original TRIAD Scout concept build. The production button will open the verified source listing after the corresponding connector is implemented.';
  $('#demoModal').classList.add('open');
 }
 function buildSources(){
@@ -468,7 +576,7 @@ async function loadLiveAuctions(){
   const resp=await fetch('/api/salvage-search',{
    method:'POST',
    headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({source,page_size:10})
+   body:JSON.stringify({source,page_size:20})
   });
   const payload=await resp.json().catch(()=>({}));
   if(!resp.ok) throw new Error(payload.error||`Backend returned ${resp.status}`);
@@ -478,7 +586,7 @@ async function loadLiveAuctions(){
   FEED_MODE='salvagealert';
   state.mode='Vehicles'; state.sort='score';
   $('#sortSelect').value='score';
-  status.innerHTML=`<strong>${LIVE_LISTINGS.length} live auction records loaded.</strong> Key stayed on the backend.`;
+  status.innerHTML=`<strong>${LIVE_LISTINGS.length} live auction records loaded.</strong> Scored from auction price + repair estimate versus ACV when available.`;
   render();
  }catch(err){
   status.textContent=`Live API test failed: ${err.message}`;
