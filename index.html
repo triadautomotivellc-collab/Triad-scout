@@ -215,11 +215,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   <button class="reset-btn" id="resetBtn" type="button">Reset filters</button>
   <div class="yardlink-box" id="auctionApiBox">
    <div class="yardlink-head"><span class="yardlink-title">Live Auction Feed</span><span class="yardlink-badge">API</span></div>
-   <p class="yardlink-copy">Authorized live auction data through SalvageAlert. Type a vehicle in the top search bar and press Enter, or load the latest inventory here. Your API key stays on the private backend.</p>
+   <p class="yardlink-copy">Authorized live auction data through SalvageAlert. Smart Search starts with IAA, then checks Copart/GovDeals only if it still needs matches. Performance trims such as SHO, SS, ZL1, GT, Scat Pack and Hellcat are resolved separately from the base model.</p>
    <div class="yardlink-actions">
     <select class="yardlink-btn" id="auctionSourceSelect" aria-label="Auction source">
-     <option value="copart_us">Copart US</option>
+     <option value="smart" selected>Smart US Search (1–3 calls)</option>
      <option value="iaai_us">IAA US</option>
+     <option value="copart_us">Copart US</option>
      <option value="govdeals_us">GovDeals US</option>
      <option value="all">All US live sources (3 calls)</option>
     </select>
@@ -485,7 +486,7 @@ function normalizeSalvageLot(lot,i){
  };
 }
 
-function activeListings(){return LIVE_LISTINGS.length?LIVE_LISTINGS:DEMO_LISTINGS}
+function activeListings(){if(FEED_MODE==='salvagealert'||FEED_MODE==='yardlink')return LIVE_LISTINGS;return DEMO_LISTINGS}
 function recomputeDistances(){if(!LIVE_LISTINGS.length||!userLocation)return;LIVE_LISTINGS=LIVE_LISTINGS.map(x=>({...x,distance:(x.lat!==null&&x.lon!==null)?haversine(userLocation.lat,userLocation.lon,x.lat,x.lon):x.distance}))}
 function filtered(){
  const q=state.query.trim().toLowerCase();
@@ -521,10 +522,10 @@ function cardTemplate(x){
   </article>`;
 }
 function render(){
- const items=filtered(); const live=LIVE_LISTINGS.length>0;
- const apiLive=live&&FEED_MODE==='salvagealert', yardLive=live&&FEED_MODE==='yardlink';
- $('#cards').innerHTML=items.length?items.map(cardTemplate).join(''):`<div class="empty">${apiLive?'No live-auction vehicles matched this search. Try a broader model name or another source.':yardLive?'No direct-feed inventory matches this search.':'No prototype results match these filters.'}</div>`;
- $('#resultsMeta').textContent=apiLive?`${items.length} matching vehicle${items.length===1?'':'s'} · ${LIVE_LISTINGS.length} loaded from SalvageAlert API`:yardLive?`${items.length} matching part${items.length===1?'':'s'} · ${LIVE_LISTINGS.length} imported via YardLink direct feed`:`${items.length} prototype match${items.length===1?'':'es'} · normalized layout · no live connectors`;
+ const items=filtered();
+ const apiLive=FEED_MODE==='salvagealert', yardLive=FEED_MODE==='yardlink', live=apiLive||yardLive;
+ $('#cards').innerHTML=items.length?items.map(cardTemplate).join(''):`<div class="empty">${apiLive?'No verified live-auction vehicles matched this search. Smart Search can check IAA, Copart and GovDeals without showing unrelated cars.':yardLive?'No direct-feed inventory matches this search.':'No prototype results match these filters.'}</div>`;
+ $('#resultsMeta').textContent=apiLive?`${items.length} verified live vehicle${items.length===1?'':'s'} · ${LIVE_LISTINGS.length} loaded from SalvageAlert`:yardLive?`${items.length} matching part${items.length===1?'':'s'} · ${LIVE_LISTINGS.length} imported via YardLink direct feed`:`${items.length} prototype match${items.length===1?'':'es'} · normalized layout · no live connectors`;
  $('#liveFeedBanner').classList.toggle('show',live);
  $('#liveFeedBanner').querySelector('span').innerHTML=apiLive?`<strong>Live auction API</strong> · real auction records loaded through the private backend.`:`<strong>YardLink direct inventory</strong> · results below come from the CSV you imported.`;
  $('#feedStatus').classList.toggle('live',yardLive);
@@ -576,7 +577,7 @@ async function loadLiveAuctions(options={}){
  btn.disabled=true;
  const oldLabel=btn.textContent;
  btn.textContent=query?'Searching…':'Loading…';
- status.textContent=query?`Searching ${source==='all'?'all live sources':source.replaceAll('_',' ')} for “${query}”…`:'Calling TRIAD private backend…';
+ status.textContent=query?`Searching ${source==='smart'?'Smart US sources':source==='all'?'all live sources':source.replaceAll('_',' ')} for “${query}”…`:'Calling TRIAD private backend…';
  try{
   const resp=await fetch('/api/salvage-search',{
    method:'POST',
@@ -585,7 +586,8 @@ async function loadLiveAuctions(options={}){
     source,
     page_size:20,
     query,
-    max_price:Number($('#priceSelect').value)||null
+    max_price:Number($('#priceSelect').value)||null,
+    smart_min:10
    })
   });
   const payload=await resp.json().catch(()=>({}));
