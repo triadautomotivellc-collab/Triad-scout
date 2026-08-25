@@ -1,0 +1,34 @@
+TRIAD SCOUT v0.8.1 — QUERY-DRIVEN PARTS CONTEXT
+=================================================
+
+RESULT: PASS
+
+Automated regression suite:
+73 passed
+0 failed
+
+Changes:
+- Removed the visible top "Sources" pill.
+- Removed the visible fixed vehicle pill ("2009 Silverado · 5.3L").
+- Parts searches no longer send a hard-coded Silverado vehicle context.
+- Vehicle context is inferred from the user's actual parts query.
+- Example: "2012 jeep left front door" resolves to:
+    Year: 2012
+    Make: JEEP
+    Model: unspecified
+    Part: Door Assembly
+    Side: LH
+- Example: "2012 jeep grand cherokee left front door" resolves to:
+    Year: 2012
+    Make: JEEP
+    Model: Grand Cherokee
+    Part: Door Assembly
+    Side: LH
+- Donor-auction searches are derived from the actual parts search text rather than a fixed Silverado.
+- Source Network remains in the side rail on layouts where it fits.
+
+Validation:
+- All JS syntax checks passed.
+- index.html script validation passed.
+- Parts parser/interchange regression tests passed.
+- Existing auction intelligence, fee, and search tests remained green.

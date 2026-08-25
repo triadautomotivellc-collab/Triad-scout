@@ -40,8 +40,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .pill,.icon-btn{height:38px;border:1px solid var(--line);background:#101216;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 12px;cursor:pointer;transition:.16s}
 .pill:hover,.icon-btn:hover{background:#171a1f;border-color:#343943}
 .pill .dot{width:7px;height:7px;border-radius:50%;background:#818894}
-.vehicle-pill{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.source-wrap{position:relative}
+.vehicle-pill{display:none!important;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.source-wrap{display:none!important;position:relative}
 .source-popover{position:absolute;right:0;top:46px;width:320px;background:#111318;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:12px;display:none}
 .source-popover.open{display:block}
 .pop-head{display:flex;align-items:flex-start;justify-content:space-between;padding:4px 4px 10px}
@@ -129,7 +129,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .source-rail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:14px 14px 11px;border-bottom:1px solid #20242a}
 .source-rail-title{font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#e5e7eb}
 .source-rail-sub{font-size:10.5px;color:#747b86;margin-top:3px;line-height:1.35}
-.rail-collapse{width:28px;height:28px;border:1px solid #2a2f37;background:#15181d;border-radius:8px;color:#8e95a0;cursor:pointer;display:grid;place-items:center;flex:0 0 auto}
+.rail-collapse{display:none!important;width:28px;height:28px;border:1px solid #2a2f37;background:#15181d;border-radius:8px;color:#8e95a0;cursor:pointer;display:grid;place-items:center;flex:0 0 auto}
 .rail-collapse:hover{color:#fff;border-color:#3a404a;background:#1b1f25}
 .source-scroll{overflow:auto;padding:7px 7px 10px;scrollbar-width:thin;scrollbar-color:#343942 transparent}
 .source-group{padding:8px 8px 4px;font-size:9px;letter-spacing:.11em;text-transform:uppercase;color:#5e6570;font-weight:800}
@@ -223,7 +223,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
    <button type="button" data-mode="Parts" class="active">Parts</button>
    <button type="button" data-mode="Everything">Everything</button>
   </div>
-  <span class="prototype-note">Parts intelligence · interchange + recycler sourcing</span>
+  <span class="prototype-note">Parts intelligence · query-driven vehicle context + interchange sourcing</span>
  </div>
  <div class="segment view-segment" id="viewSegment" aria-label="View mode">
   <button type="button" data-view="list" class="active">List</button>
@@ -359,7 +359,7 @@ const INTELLIGENCE_BY_ID=new Map();
 let userLocation=null;
 const DEFAULT_LOCATION='McAllen, TX';
 const DEFAULT_MIN_PRICE=0, DEFAULT_MAX_PRICE=100000;
-const CURRENT_VEHICLE={year:2009,make:'Chevrolet',model:'Silverado 1500',trim:'',engine:'5.3L',transmission:'',vin:''};
+const CURRENT_VEHICLE={year:null,make:'',model:'',trim:'',engine:'',transmission:'',vin:''};
 let state={mode:'Parts',view:'list',query:'',radius:250,minPrice:DEFAULT_MIN_PRICE,maxPrice:DEFAULT_MAX_PRICE,sort:'price'};
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const money=n=>Number(n)>0?new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n):'Call';
@@ -576,7 +576,24 @@ function normalizePartApiResult(x,i){
  const donor=[x.year,x.make,x.model,x.trim,x.engine].filter(Boolean).join(' · ');
  return {id:`part-api-${x.source||'src'}-${x.id||i}`,kind:'PART',score:Number(x.rankScore)||80,title:x.description||x.partType||'Recycler part',subtitle:donor||'Compatible recycled part',source:x.source||'Recycler',price:Number(x.price)||0,total:landed,distance:Number.isFinite(Number(x.distance))?Number(x.distance):null,city:[x.city,x.state].filter(Boolean).join(', ')||x.zip||'',seller:x.yard||'Recycler',condition:[x.grade?`Grade ${x.grade}`:'',x.condition].filter(Boolean).join(' · ')||'Used',mileage:x.mileage?`${x.mileage}`:'Mileage n/a',fit:x?.match?.reason||'Verify fitment',interchange:x.interchangeNumber||x.oemPartNumber||x.stock||'Fitment record',photo:validHttpUrl(x.image)?x.image:placeholder(x.partType||'PART'),url:validHttpUrl(x.url)?x.url:'',phone:x.phone||'',direct:true,stock:x.stock||'',partApi:true,landedBreakdown:x.landed,grade:x.grade||'',matchConfidence:Number(x?.match?.confidence)||0};
 }
-function vehicleSearchText(){return [CURRENT_VEHICLE.year,CURRENT_VEHICLE.make,CURRENT_VEHICLE.model].filter(Boolean).join(' ')}
+function vehicleSearchText(rawQuery=''){
+ const metaVehicle=PARTS_META?.query?.vehicle||{};
+ const fromMeta=[metaVehicle.year,metaVehicle.make,metaVehicle.model,metaVehicle.trim].filter(Boolean).join(' ').trim();
+ if(fromMeta) return fromMeta;
+ let q=String(rawQuery||'').trim();
+ q=q
+  .replace(/\b(?:left|right|lh|rh|driver|passenger)\b/gi,' ')
+  .replace(/\b(?:front|rear)\b/gi,' ')
+  .replace(/\b(?:6l80e?|6l90e?|4l60e?|10r80)\b/gi,' ')
+  .replace(/\b(?:transmission|trans|gearbox|engine|motor|long block|short block)\b/gi,' ')
+  .replace(/\b(?:turbocharger|turbo|headlight|headlamp|taillight|tail light|tail lamp)\b/gi,' ')
+  .replace(/\b(?:door assembly|front door|rear door|door|hood|bonnet|fender)\b/gi,' ')
+  .replace(/\b(?:bumper cover|bumper|radiator support|core support|radiator)\b/gi,' ')
+  .replace(/\b(?:condenser|ac condenser|a\/c condenser|alternator|starter|transfer case)\b/gi,' ')
+  .replace(/\b(?:rear differential|differential|rear end|used|salvage|replacement|part|parts|oem)\b/gi,' ')
+  .replace(/\s+/g,' ').trim();
+ return q;
+}
 function updateTopDeck(){
  const donor=[...LIVE_LISTINGS].filter(x=>x.kind==='VEHICLE').sort((a,b)=>(a.price||9e9)-(b.price||9e9))[0];
  $('#topDonorPrice').textContent=donor?money(donor.price):'—';
@@ -607,7 +624,7 @@ async function searchParts(query){
  PARTS_SEARCHED=true;$('#partsCommandMain').textContent='Searching…';$('#partsProviderStatus').textContent='Cross-referencing interchange + recycler inventory…';
  const location={label:$('#locationInput').value.trim(),lat:userLocation?.lat??null,lon:userLocation?.lon??null};
  try{
-  const r=await fetch('/api/parts-search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query,vehicle:CURRENT_VEHICLE,location,max_price:state.maxPrice,yardlink_inventory:YARDLINK_RAW,licensed_interchange:LICENSED_INTERCHANGE,reserve_unknown_shipping:true,unknown_shipping_reserve:75})});
+  const r=await fetch('/api/parts-search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query,vehicle:{},location,max_price:state.maxPrice,yardlink_inventory:YARDLINK_RAW,licensed_interchange:LICENSED_INTERCHANGE,reserve_unknown_shipping:true,unknown_shipping_reserve:75})});
   const d=await r.json();if(!r.ok)throw new Error(d.error||`Parts backend ${r.status}`);
   PARTS_META=d;PART_RESULTS=(d.parts||[]).map(normalizePartApiResult).sort((a,b)=>(a.total||9e9)-(b.total||9e9));
   updateTopDeck();render();
@@ -618,11 +635,11 @@ async function runPrimarySearch(q){
  state.minPrice=Math.max(0,Number($('#minPriceInput').value)||0);
  state.maxPrice=Math.min(100000,Math.max(state.minPrice,Number($('#maxPriceInput').value)||100000));
  if(state.mode==='Parts'){
-  await Promise.all([searchParts(q),loadLiveAuctions({query:vehicleSearchText(),clearLocalQuery:true,silent:true})]);
+  await Promise.all([searchParts(q),loadLiveAuctions({query:vehicleSearchText(q),clearLocalQuery:true,silent:true})]);
   state.sort='price';$('#sortSelect').value='price';render();updateTopDeck();await updateTopAuctionFee();return;
  }
  if(state.mode==='Vehicles'){await loadLiveAuctions({query:q,clearLocalQuery:true});updateTopDeck();await updateTopAuctionFee();return}
- await Promise.all([searchParts(q),loadLiveAuctions({query:q||vehicleSearchText(),clearLocalQuery:true,silent:true})]);render();updateTopDeck();await updateTopAuctionFee();
+ await Promise.all([searchParts(q),loadLiveAuctions({query:q||vehicleSearchText(q),clearLocalQuery:true,silent:true})]);render();updateTopDeck();await updateTopAuctionFee();
 }
 function moneyOrDash(v){const n=Number(v);return Number.isFinite(n)&&n>0?money(n):'—'}
 function pctOrDash(v){const n=Number(v);return Number.isFinite(n)?`${Math.round(n*100)}%`:'—'}
@@ -819,7 +836,7 @@ $('#clearFeedBtn').addEventListener('click',()=>{INTELLIGENCE_BY_ID.clear();LIVE
 $('#sourceBtn').addEventListener('click',e=>{e.stopPropagation();const wide=window.matchMedia('(min-width:1321px)').matches&&state.view==='list';if(wide){const main=$('#mainLayout');main.classList.toggle('sources-hidden');const visible=!main.classList.contains('sources-hidden');$('#sourceBtn').setAttribute('aria-expanded',String(visible));$('#sourcePopover').classList.remove('open')}else{const p=$('#sourcePopover');p.classList.toggle('open');$('#sourceBtn').setAttribute('aria-expanded',p.classList.contains('open'))}});
 document.addEventListener('click',e=>{if(!e.target.closest('.source-wrap')){$('#sourcePopover').classList.remove('open');$('#sourceBtn').setAttribute('aria-expanded','false')}});
 $('#hideSourceRail').addEventListener('click',()=>{$('#mainLayout').classList.add('sources-hidden');$('#sourceBtn').setAttribute('aria-expanded','false')});
-$('#vehiclePill').addEventListener('click',()=>{alert(`Current parts vehicle: ${CURRENT_VEHICLE.year} ${CURRENT_VEHICLE.make} ${CURRENT_VEHICLE.model} ${CURRENT_VEHICLE.engine}. Vehicle-profile editing is the next UI control.`)});
+$('#vehiclePill').addEventListener('click',()=>{alert('Vehicle context now comes directly from the parts search query.')});
 function openFilters(){$('#filtersPanel').classList.add('open');$('#drawerBackdrop').classList.add('open')}function closeFilters(){$('#filtersPanel').classList.remove('open');$('#drawerBackdrop').classList.remove('open')}
 $('#mobileFilter').addEventListener('click',openFilters);$('#drawerBackdrop').addEventListener('click',closeFilters);
 $('#closeModal').addEventListener('click',()=>$('#demoModal').classList.remove('open'));$('#demoModal').addEventListener('click',e=>{if(e.target.id==='demoModal')e.currentTarget.classList.remove('open')});

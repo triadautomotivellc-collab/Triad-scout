@@ -83,3 +83,20 @@ test('rebuild basket sums cheapest compatible parts and reports unresolved',()=>
  assert.equal(basket.unresolved,1);
  assert.equal(basket.complete,false);
 });
+
+test('part query infers Jeep vehicle context instead of using a Silverado fallback',()=>{
+ const q=parsePartQuery('2012 jeep left front door',{});
+ assert.equal(q.vehicle.year,2012);
+ assert.equal(q.vehicle.make,'JEEP');
+ assert.equal(q.vehicle.model,'');
+ assert.equal(q.partType,'Door Assembly');
+ assert.equal(q.side,'LH');
+});
+
+test('part query infers Grand Cherokee model from the search text',()=>{
+ const q=parsePartQuery('2012 jeep grand cherokee left front door',{});
+ assert.equal(q.vehicle.year,2012);
+ assert.equal(q.vehicle.make,'JEEP');
+ assert.equal(q.vehicle.model,'Grand Cherokee');
+ assert.equal(q.side,'LH');
+});

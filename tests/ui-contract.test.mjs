@@ -11,3 +11,14 @@ test('parts search calls parts intelligence endpoint',()=>assert.match(html,/\/a
 test('fee preview is automatic and front-center',()=>assert.match(html,/\/api\/fee-preview/));
 test('intelligence panel remains embedded in auction result cards',()=>{assert.match(html,/TRIAD Intelligence/);assert.match(html,/data-intel-id/);assert.match(html,/\/api\/intelligence/)});
 test('intelligence profile does not silently invent tax or salvage resale discount',()=>{assert.match(html,/id="intelTaxRate"[^>]*placeholder="5\.5"/);assert.match(html,/id="intelRebuiltDiscount"[^>]*placeholder="25"/)});
+
+test('top vehicle context pill and top Sources pill are visually removed',()=>{
+ assert.match(html,/\.vehicle-pill\{display:none!important/);
+ assert.match(html,/\.source-wrap\{display:none!important/);
+});
+
+test('parts search no longer sends fixed Silverado context',()=>{
+ assert.doesNotMatch(html,/vehicle:CURRENT_VEHICLE/);
+ assert.match(html,/vehicle:\{\}/);
+ assert.match(html,/vehicleSearchText\(q\)/);
+});
