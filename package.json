@@ -1,8 +1,11 @@
 {
-  "name": "triad-scout",
-  "private": true,
-  "version": "0.1.0",
-  "engines": {
-    "node": ">=18"
+  "name":"triad-scout",
+  "private":true,
+  "version":"0.5.0-alpha",
+  "type":"module",
+  "engines":{"node":">=18"},
+  "scripts":{
+    "check":"node --check api/health.js && node --check api/salvage-search.js && node --check api/self-test.js && node --check lib/scout-core.js && node scripts/validate-index.mjs",
+    "test":"npm run check && node --test tests/*.test.mjs"
   }
 }
