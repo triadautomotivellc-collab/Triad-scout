@@ -162,6 +162,20 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
  .card{grid-template-columns:88px minmax(0,1fr)}.photo{height:92px}.subtitle{display:none}.midline{grid-column:1/-1}.bottomline{grid-column:1/-1}.topline{gap:8px}.view-btn{height:32px}.results-meta{max-width:220px}.header-actions{gap:5px}.pill,.icon-btn{height:36px}.source-btn{font-size:12px}
 }
 
+/* Parts sourcing command deck */
+.command-deck{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.command-card{background:linear-gradient(180deg,#12151a,#0d0f12);border:1px solid var(--line);border-radius:14px;padding:13px;min-width:0}
+.command-card.hot{border-color:rgba(225,29,46,.42);box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+.command-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.command-title{font-weight:800;font-size:13px;letter-spacing:-.01em}.command-badge{font-size:9px;font-weight:800;letter-spacing:.08em;padding:4px 7px;border:1px solid #343943;border-radius:999px;color:#aeb5c0;text-transform:uppercase}
+.command-main{font-size:18px;font-weight:800;letter-spacing:-.035em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.command-sub{font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.4}
+.command-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.command-actions button,.command-actions select{height:32px;border:1px solid #2b3038;background:#15181d;border-radius:8px;color:#e7e9ed;padding:0 9px;font-size:11px;font-weight:700}
+.command-actions button{cursor:pointer}.command-actions button.primary{background:var(--red);border-color:var(--red);color:#fff}.command-actions button:hover{border-color:#4a515d}
+.fee-lines{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:8px}.fee-cell{background:#0a0c0f;border:1px solid #20242a;border-radius:9px;padding:7px}.fee-cell span{display:block;color:#79818d;font-size:9px;text-transform:uppercase;letter-spacing:.07em}.fee-cell b{display:block;font-size:13px;margin-top:2px;font-variant-numeric:tabular-nums}
+.interchange-strip{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.interchange-chip{font-size:10px;border:1px solid #30353d;border-radius:999px;padding:4px 7px;color:#bac0c9;background:#15181d}.interchange-chip.good{border-color:rgba(85,217,139,.35);color:#73dda0;background:rgba(85,217,139,.07)}
+.parts-fit{color:#6fe09d;font-weight:700}.part-grade{font-size:10px;border:1px solid #333942;border-radius:6px;padding:2px 5px;color:#c4c9d1}.part-price-detail{font-size:10px;color:#87909c;margin-top:3px}.parts-source-note{font-size:10px;color:#737b87;margin-top:6px;line-height:1.35}
+@media(max-width:1050px){.command-deck{grid-template-columns:1fr}.command-card{padding:11px}}
+
 /* YardLink direct-feed MVP */
 .yardlink-box{margin-top:16px;border:1px solid rgba(225,29,46,.28);background:linear-gradient(180deg,rgba(225,29,46,.07),rgba(225,29,46,.018));border-radius:12px;padding:13px}
 .yardlink-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px}.yardlink-title{font-size:12px;font-weight:750;letter-spacing:.01em}.yardlink-badge{font-size:9px;font-weight:800;letter-spacing:.08em;color:#ff6673;border:1px solid rgba(255,53,69,.35);border-radius:999px;padding:3px 6px}
@@ -206,10 +220,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
  <div style="display:flex;align-items:center;min-width:max-content">
   <div class="segment" id="modeSegment" aria-label="Search mode">
    <button type="button" data-mode="Vehicles">Vehicles</button>
-   <button type="button" data-mode="Parts">Parts</button>
-   <button type="button" data-mode="Everything" class="active">Everything</button>
+   <button type="button" data-mode="Parts" class="active">Parts</button>
+   <button type="button" data-mode="Everything">Everything</button>
   </div>
-  <span class="prototype-note">Live auction intelligence · direct recycler feeds</span>
+  <span class="prototype-note">Parts intelligence · interchange + recycler sourcing</span>
  </div>
  <div class="segment view-segment" id="viewSegment" aria-label="View mode">
   <button type="button" data-view="list" class="active">List</button>
@@ -221,11 +235,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 <main class="main" id="mainLayout">
  <aside class="filters" id="filtersPanel">
   <h2 class="panel-title">Refine results</h2><div class="panel-sub">Fast filters. Search stays at the top.</div>
-  <div class="field"><label for="locationInput">Location</label><input id="locationInput" value="McAllen, TX" aria-label="Location"></div>
+  <div class="field"><label for="locationInput">Default location</label><input id="locationInput" value="McAllen, TX" aria-label="Default location"></div>
   <div class="field-grid">
    <div class="field"><label for="radiusSelect">Radius</label><select id="radiusSelect"><option value="50">50 mi</option><option value="100">100 mi</option><option value="250" selected>250 mi</option><option value="1000">Any distance</option></select></div>
-   <div class="field"><label for="priceSelect">Max price</label><select id="priceSelect"><option value="1500">$1,500</option><option value="5000">$5,000</option><option value="10000" selected>$10,000</option><option value="999999">Any price</option></select></div>
+   <div class="field"><label for="minPriceInput">Min price</label><input id="minPriceInput" inputmode="numeric" value="0"></div>
   </div>
+  <div class="field"><label for="maxPriceInput">Max price</label><input id="maxPriceInput" inputmode="numeric" value="100000"></div>
   <div class="field"><label for="sortSelectLeft">Condition</label><select id="conditionSelect"><option value="all">Any condition</option><option value="used">Used / OEM</option><option value="vehicle">Vehicle listings</option></select></div>
   <details class="advanced">
    <summary>Advanced filters + Buy Intelligence</summary>
@@ -254,40 +269,39 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   </details>
   <button class="search-btn" id="applyBtn" type="button">Apply filters</button>
   <button class="reset-btn" id="resetBtn" type="button">Reset filters</button>
-  <div class="yardlink-box" id="auctionApiBox">
-   <div class="yardlink-head"><span class="yardlink-title">Live Auction Feed</span><span class="yardlink-badge">API</span></div>
-   <p class="yardlink-copy">Authorized live auction data through SalvageAlert. Smart Search starts with IAA, then checks Copart/GovDeals only if it still needs matches. Performance trims such as SHO, SS, ZL1, GT, Scat Pack and Hellcat are resolved separately from the base model.</p>
-   <div class="yardlink-actions">
-    <select class="yardlink-btn" id="auctionSourceSelect" aria-label="Auction source">
-     <option value="smart" selected>Smart US Search (1–3 calls)</option>
-     <option value="iaai_us">IAA US</option>
-     <option value="copart_us">Copart US</option>
-     <option value="govdeals_us">GovDeals US</option>
-     <option value="all">All US live sources (3 calls)</option>
-    </select>
-    <button class="yardlink-btn primary" id="loadAuctionsBtn" type="button">Search live vehicles</button>
-   </div>
-   <div class="feed-status" id="auctionStatus">Waiting for private backend connection.</div>
-  </div>
-  <div class="yardlink-box">
-   <div class="yardlink-head"><span class="yardlink-title">YardLink Direct Feed</span><span class="yardlink-badge">DIRECT</span></div>
-   <p class="yardlink-copy">Import inventory supplied directly by a recycler. Scout searches that feed locally in your browser — no scraping and no upload to a server.</p>
-   <div class="yardlink-actions">
-    <button class="yardlink-btn primary" id="importFeedBtn" type="button">Import recycler CSV</button>
-    <button class="yardlink-btn" id="useLocationBtn" type="button">Use my location</button>
-    <button class="yardlink-btn" id="downloadTemplateBtn" type="button">CSV template</button>
-   </div>
-   <input id="yardFeedInput" type="file" accept=".csv,text/csv" hidden>
-   <div class="feed-status" id="feedStatus">Prototype cards are active. Import a real yard CSV to switch the results feed to direct inventory.</div>
-   <div class="feed-note">For automatic nearby sorting, the feed can include <b>yard_lat</b> and <b>yard_lon</b>, or a precomputed <b>distance_miles</b> column.</div>
-  </div>
  </aside>
  <section class="results" id="resultsSection">
+  <div class="command-deck" id="commandDeck">
+   <div class="command-card hot" id="auctionCommandCard">
+    <div class="command-head"><div class="command-title">Live Donor Feed + Fees</div><span class="command-badge">AUTO</span></div>
+    <div class="command-main" id="auctionCommandMain">Ready</div>
+    <div class="command-sub" id="auctionCommandSub">Parts searches automatically check nearby donor auctions in parallel.</div>
+    <div class="fee-lines"><div class="fee-cell"><span>Best donor</span><b id="topDonorPrice">—</b></div><div class="fee-cell"><span>Buyer fees</span><b id="topAuctionFees">—</b></div></div>
+    <div class="command-actions"><select id="auctionSourceSelect" aria-label="Auction source"><option value="smart" selected>Smart US</option><option value="iaai_us">IAA US</option><option value="copart_us">Copart US</option><option value="govdeals_us">GovDeals US</option><option value="all">All US</option></select><button type="button" id="loadAuctionsBtn">Refresh donor feed</button></div>
+    <div class="parts-source-note" id="auctionStatus">Waiting for search.</div>
+   </div>
+   <div class="command-card" id="partsCommandCard">
+    <div class="command-head"><div class="command-title">Interchange + Cheapest Part</div><span class="command-badge">PARTS</span></div>
+    <div class="command-main" id="partsCommandMain">Search a part</div>
+    <div class="command-sub" id="partsCommandSub">Licensed interchange data expands compatible donor years/models; inventory is ranked by landed cost.</div>
+    <div class="interchange-strip" id="interchangeStrip"><span class="interchange-chip">No interchange loaded</span></div>
+    <div class="command-actions"><button class="primary" type="button" id="importFeedBtn">Import YardLink CSV</button><button type="button" id="importInterchangeBtn">Import licensed interchange</button><button type="button" id="downloadTemplateBtn">YardLink template</button></div>
+    <input id="yardFeedInput" type="file" accept=".csv,text/csv" hidden><input id="interchangeInput" type="file" accept=".csv,text/csv" hidden>
+    <div class="parts-source-note" id="feedStatus">No direct recycler inventory loaded.</div>
+   </div>
+   <div class="command-card" id="rebuildCommandCard">
+    <div class="command-head"><div class="command-title">Rebuild Cost Snapshot</div><span class="command-badge">LIVE</span></div>
+    <div class="command-main" id="rebuildCommandMain">—</div>
+    <div class="command-sub" id="rebuildCommandSub">Cheapest verified salvage part + donor acquisition comparison.</div>
+    <div class="fee-lines"><div class="fee-cell"><span>Cheapest part</span><b id="topPartCost">—</b></div><div class="fee-cell"><span>Matches</span><b id="topPartMatches">0</b></div></div>
+    <div class="command-actions"><button type="button" id="useLocationBtn">Use my location</button><button type="button" id="clearFeedBtn">Clear session</button></div>
+    <div class="parts-source-note" id="partsProviderStatus">Hollander/EDEN and Car-Part adapters remain disabled until licensed/authorized access is configured.</div>
+   </div>
+  </div>
   <div class="results-head">
    <div><h1>Unified results</h1><div class="results-meta" id="resultsMeta">Ready for live search</div></div>
    <select class="sort" id="sortSelect" aria-label="Sort results"><option value="score">TRIAD Score</option><option value="price">Price: low to high</option><option value="distance">Nearest first</option></select>
   </div>
-  <div class="live-banner" id="liveFeedBanner"><span><strong>YardLink direct inventory</strong> · results below come from the CSV you imported.</span><button id="clearFeedBtn" type="button">Clear feed</button></div>
   <div class="cards" id="cards"></div>
  </section>
  <section class="map-pane" id="mapPane" aria-label="Nearby inventory map placeholder">
@@ -308,6 +322,7 @@ const DEMO_LISTINGS = [{"id":"pt-1","kind":"PART","score":94,"title":"6L80 Trans
 const SOURCES = [
  {name:'SalvageAlert API',mark:'SA',kind:'Ready',group:'Live connectors',featured:true,api:true},
  {name:'YardLink Direct',mark:'YL',kind:'Ready',group:'Direct recycler feeds',featured:true,direct:true},
+ {name:'Hollander Interchange / EDEN',mark:'HI',kind:'Licensed',group:'Parts & local',featured:true},
  {name:'Car-Part.com',mark:'CP',kind:'Parts',group:'Parts & local',featured:true},
  {name:'eBay Motors',mark:'eB',kind:'Market',group:'Parts & local',featured:true},
  {name:'LKQ Online',mark:'LKQ',kind:'Parts',group:'Parts & local',featured:true},
@@ -332,10 +347,20 @@ const SOURCES = [
  {name:'SmartAuction',mark:'SA',kind:'Dealer',group:'Dealer & salvage'}
 ];
 let LIVE_LISTINGS=[];
-let FEED_MODE='demo';
+let PART_RESULTS=[];
+let YARDLINK_RAW=[];
+let YARDLINK_LISTINGS=[];
+let LICENSED_INTERCHANGE=[];
+let PARTS_META=null;
+let AUCTION_SEARCHED=false;
+let PARTS_SEARCHED=false;
+let FEED_MODE='live';
 const INTELLIGENCE_BY_ID=new Map();
 let userLocation=null;
-let state={mode:'Everything',view:'list',query:'',radius:250,maxPrice:10000,sort:'score'};
+const DEFAULT_LOCATION='McAllen, TX';
+const DEFAULT_MIN_PRICE=0, DEFAULT_MAX_PRICE=100000;
+const CURRENT_VEHICLE={year:2009,make:'Chevrolet',model:'Silverado 1500',trim:'',engine:'5.3L',transmission:'',vin:''};
+let state={mode:'Parts',view:'list',query:'',radius:250,minPrice:DEFAULT_MIN_PRICE,maxPrice:DEFAULT_MAX_PRICE,sort:'price'};
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const money=n=>Number(n)>0?new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n):'Call';
 const clean=s=>String(s??'').trim();
@@ -530,17 +555,74 @@ function normalizeSalvageLot(lot,i){
  };
 }
 
-function activeListings(){if(FEED_MODE==='salvagealert'||FEED_MODE==='yardlink')return LIVE_LISTINGS;return DEMO_LISTINGS}
+function activeListings(){
+ if(state.mode==='Parts') return PART_RESULTS;
+ if(state.mode==='Vehicles') return LIVE_LISTINGS;
+ return [...PART_RESULTS,...LIVE_LISTINGS];
+}
 function recomputeDistances(){if(!LIVE_LISTINGS.length||!userLocation)return;LIVE_LISTINGS=LIVE_LISTINGS.map(x=>({...x,distance:(x.lat!==null&&x.lon!==null)?haversine(userLocation.lat,userLocation.lon,x.lat,x.lon):x.distance}))}
 function filtered(){
  const q=state.query.trim().toLowerCase();
  let arr=activeListings().filter(x=>state.mode==='Everything'||(state.mode==='Vehicles'&&x.kind==='VEHICLE')||(state.mode==='Parts'&&x.kind==='PART'));
  if(q)arr=arr.filter(x=>[x.title,x.subtitle,x.source,x.city,x.seller,x.interchange,x.stock,x.vin].join(' ').toLowerCase().includes(q));
- arr=arr.filter(x=>(x.distance==null||x.distance<=state.radius)&&(x.price<=0||x.price<=state.maxPrice));
+ arr=arr.filter(x=>(x.distance==null||x.distance<=state.radius)&&(x.price<=0||(x.price>=state.minPrice&&x.price<=state.maxPrice)));
  if(state.sort==='price')arr.sort((a,b)=>(a.price||Number.MAX_SAFE_INTEGER)-(b.price||Number.MAX_SAFE_INTEGER));
  else if(state.sort==='distance')arr.sort((a,b)=>(a.distance??999999)-(b.distance??999999));
  else arr.sort((a,b)=>b.score-a.score);
  return arr;
+}
+function normalizePartApiResult(x,i){
+ const landed=Number(x?.landed?.total)||Number(x.price)||0;
+ const donor=[x.year,x.make,x.model,x.trim,x.engine].filter(Boolean).join(' · ');
+ return {id:`part-api-${x.source||'src'}-${x.id||i}`,kind:'PART',score:Number(x.rankScore)||80,title:x.description||x.partType||'Recycler part',subtitle:donor||'Compatible recycled part',source:x.source||'Recycler',price:Number(x.price)||0,total:landed,distance:Number.isFinite(Number(x.distance))?Number(x.distance):null,city:[x.city,x.state].filter(Boolean).join(', ')||x.zip||'',seller:x.yard||'Recycler',condition:[x.grade?`Grade ${x.grade}`:'',x.condition].filter(Boolean).join(' · ')||'Used',mileage:x.mileage?`${x.mileage}`:'Mileage n/a',fit:x?.match?.reason||'Verify fitment',interchange:x.interchangeNumber||x.oemPartNumber||x.stock||'Fitment record',photo:validHttpUrl(x.image)?x.image:placeholder(x.partType||'PART'),url:validHttpUrl(x.url)?x.url:'',phone:x.phone||'',direct:true,stock:x.stock||'',partApi:true,landedBreakdown:x.landed,grade:x.grade||'',matchConfidence:Number(x?.match?.confidence)||0};
+}
+function vehicleSearchText(){return [CURRENT_VEHICLE.year,CURRENT_VEHICLE.make,CURRENT_VEHICLE.model].filter(Boolean).join(' ')}
+function updateTopDeck(){
+ const donor=[...LIVE_LISTINGS].filter(x=>x.kind==='VEHICLE').sort((a,b)=>(a.price||9e9)-(b.price||9e9))[0];
+ $('#topDonorPrice').textContent=donor?money(donor.price):'—';
+ $('#auctionCommandMain').textContent=AUCTION_SEARCHED?`${LIVE_LISTINGS.length} verified donor vehicle${LIVE_LISTINGS.length===1?'':'s'}`:'Ready';
+ $('#auctionCommandSub').textContent=donor?`${donor.year||''} ${donor.make||''} ${donor.model||''} · ${donor.source}`:'Parts searches automatically check matching donor auctions in parallel.';
+ const cheapest=PART_RESULTS[0];
+ $('#topPartCost').textContent=cheapest?money(cheapest.total||cheapest.price):'—';
+ $('#topPartMatches').textContent=String(PART_RESULTS.length);
+ $('#rebuildCommandMain').textContent=cheapest?`${money(cheapest.total||cheapest.price)} cheapest verified part`:'No verified part yet';
+ $('#partsCommandMain').textContent=PARTS_META?.query?.partType||'Search a part';
+ const interchange=PARTS_META?.interchange;
+ const chips=[];
+ if(interchange?.resolved){chips.push(`<span class="interchange-chip good">${escapeHtml((interchange.group_ids||[]).slice(0,3).join(', ')||'Interchange resolved')}</span>`);chips.push(`<span class="interchange-chip">${Number(interchange.compatible_vehicle_count)||0} compatible donors</span>`)}else chips.push('<span class="interchange-chip">No licensed interchange resolved</span>');
+ $('#interchangeStrip').innerHTML=chips.join('');
+ const providers=PARTS_META?.providers||[];
+ const summary=providers.map(p=>`${p.name}: ${p.ok?(p.count||0)+' results':p.status}`).join(' · ');
+ $('#partsProviderStatus').textContent=summary||'Hollander/EDEN and Car-Part adapters remain disabled until licensed/authorized access is configured.';
+}
+async function updateTopAuctionFee(){
+ const donor=[...LIVE_LISTINGS].filter(x=>x.kind==='VEHICLE'&&Number(x.price)>0).sort((a,b)=>a.price-b.price)[0];
+ if(!donor){$('#topAuctionFees').textContent='—';return}
+ try{
+  const r=await fetch('/api/fee-preview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:donor.source,bid:donor.price,titleStatus:donor.titleStatus,profile:intelligenceProfile()})});
+  const d=await r.json();$('#topAuctionFees').textContent=d?.fee?.known?money(d.fee.total):'Needs profile';
+ }catch{$('#topAuctionFees').textContent='—'}
+}
+async function searchParts(query){
+ PARTS_SEARCHED=true;$('#partsCommandMain').textContent='Searching…';$('#partsProviderStatus').textContent='Cross-referencing interchange + recycler inventory…';
+ const location={label:$('#locationInput').value.trim(),lat:userLocation?.lat??null,lon:userLocation?.lon??null};
+ try{
+  const r=await fetch('/api/parts-search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query,vehicle:CURRENT_VEHICLE,location,max_price:state.maxPrice,yardlink_inventory:YARDLINK_RAW,licensed_interchange:LICENSED_INTERCHANGE,reserve_unknown_shipping:true,unknown_shipping_reserve:75})});
+  const d=await r.json();if(!r.ok)throw new Error(d.error||`Parts backend ${r.status}`);
+  PARTS_META=d;PART_RESULTS=(d.parts||[]).map(normalizePartApiResult).sort((a,b)=>(a.total||9e9)-(b.total||9e9));
+  updateTopDeck();render();
+ }catch(err){PART_RESULTS=[];PARTS_META={providers:[]};$('#partsProviderStatus').textContent=`Parts search failed: ${err.message}`;updateTopDeck();render()}
+}
+async function runPrimarySearch(q){
+ state.query='';
+ state.minPrice=Math.max(0,Number($('#minPriceInput').value)||0);
+ state.maxPrice=Math.min(100000,Math.max(state.minPrice,Number($('#maxPriceInput').value)||100000));
+ if(state.mode==='Parts'){
+  await Promise.all([searchParts(q),loadLiveAuctions({query:vehicleSearchText(),clearLocalQuery:true,silent:true})]);
+  state.sort='price';$('#sortSelect').value='price';render();updateTopDeck();await updateTopAuctionFee();return;
+ }
+ if(state.mode==='Vehicles'){await loadLiveAuctions({query:q,clearLocalQuery:true});updateTopDeck();await updateTopAuctionFee();return}
+ await Promise.all([searchParts(q),loadLiveAuctions({query:q||vehicleSearchText(),clearLocalQuery:true,silent:true})]);render();updateTopDeck();await updateTopAuctionFee();
 }
 function moneyOrDash(v){const n=Number(v);return Number.isFinite(n)&&n>0?money(n):'—'}
 function pctOrDash(v){const n=Number(v);return Number.isFinite(n)?`${Math.round(n*100)}%`:'—'}
@@ -599,7 +681,7 @@ function cardTemplate(x){
    ${x.repairEstimate>0?`<span>Repair est. <b>${money(x.repairEstimate)}</b></span>`:''}
    ${x.projectCost>0?`<span>Buy + repair <b>${money(x.projectCost)}</b></span>`:''}
   </div>`:'';
- const normalInfo=x.apiLive?auctionMetrics:`<div class="info"><span class="fit">${escapeHtml(x.fit)}</span><span><b>${escapeHtml(x.source)}</b></span><span>${escapeHtml(x.city)}</span><span>${escapeHtml(x.mileage)}</span><span class="landed">Landed <strong>${money(x.total)}</strong></span></div>`;
+ const normalInfo=x.apiLive?auctionMetrics:x.partApi?`<div class="info"><span class="parts-fit">${escapeHtml(x.fit)}</span>${x.grade?`<span class="part-grade">${escapeHtml(x.grade)}</span>`:''}<span><b>${escapeHtml(x.source)}</b></span><span>${escapeHtml(x.city)}</span><span class="landed">Landed <strong>${money(x.total)}</strong></span></div>`:`<div class="info"><span class="fit">${escapeHtml(x.fit)}</span><span><b>${escapeHtml(x.source)}</b></span><span>${escapeHtml(x.city)}</span><span>${escapeHtml(x.mileage)}</span><span class="landed">Landed <strong>${money(x.total)}</strong></span></div>`;
  const scoreName=x.apiLive?'TRIAD Deal Score':'TRIAD Score';
  const scoreHint=x.apiLive?`<div class="scorehint" title="${escapeHtml(x.scoreReason||'')}">${escapeHtml(x.scoreReason||'Opportunity rating from auction economics')} <span class="score-confidence">${escapeHtml(x.scoreConfidence||'')}</span></div>`:'';
  return `<article class="card${x.direct?' direct-feed':''}">
@@ -614,20 +696,15 @@ function cardTemplate(x){
 }
 function render(){
  const items=filtered();
- const apiLive=FEED_MODE==='salvagealert', yardLive=FEED_MODE==='yardlink', live=apiLive||yardLive;
- $('#cards').innerHTML=items.length?items.map(cardTemplate).join(''):`<div class="empty">${apiLive?'No verified live-auction vehicles matched this search. Smart Search can check IAA, Copart and GovDeals without showing unrelated cars.':yardLive?'No direct-feed inventory matches this search.':'No prototype results match these filters.'}</div>`;
- $('#resultsMeta').textContent=apiLive?`${items.length} verified live vehicle${items.length===1?'':'s'} · ${LIVE_LISTINGS.length} loaded from SalvageAlert`:yardLive?`${items.length} matching part${items.length===1?'':'s'} · ${LIVE_LISTINGS.length} imported via YardLink direct feed`:`${items.length} prototype match${items.length===1?'':'es'} · normalized layout · no live connectors`;
- $('#liveFeedBanner').classList.toggle('show',live);
- $('#liveFeedBanner').querySelector('span').innerHTML=apiLive?`<strong>Live auction API</strong> · real auction records loaded through the private backend.`:`<strong>YardLink direct inventory</strong> · results below come from the CSV you imported.`;
- $('#feedStatus').classList.toggle('live',yardLive);
- $('#feedStatus').innerHTML=yardLive?`<strong>${LIVE_LISTINGS.length} inventory rows loaded.</strong> This session is using recycler-supplied data only.`:'Prototype cards are active. Import a real yard CSV to switch the results feed to direct inventory.';
+ $('#cards').innerHTML=items.length?items.map(cardTemplate).join(''):`<div class="empty">${state.mode==='Parts'?(PARTS_SEARCHED?'No verified recycled-part matches found. Load a YardLink feed, import licensed interchange data, or configure an authorized recycler connector.':'Search a part to start interchange + donor sourcing.'):(AUCTION_SEARCHED?'No verified live-auction vehicles matched this search.':'Search to load live auction vehicles.')}</div>`;
+ $('#resultsMeta').textContent=state.mode==='Parts'?`${items.length} verified part${items.length===1?'':'s'} · cheapest compatible inventory first`:state.mode==='Vehicles'?`${items.length} verified live vehicle${items.length===1?'':'s'}`:`${items.length} combined verified result${items.length===1?'':'s'}`;
  $$('[data-id]').forEach(b=>b.addEventListener('click',()=>openItem(b.dataset.id)));
  $$('.intel-analyze[data-intel-id]').forEach(b=>b.addEventListener('click',()=>analyzeDeal(b.dataset.intelId)));
  $$('#modeSegment button').forEach(b=>b.classList.toggle('active',b.dataset.mode===state.mode));
  $$('#viewSegment button').forEach(b=>b.classList.toggle('active',b.dataset.view===state.view));
  const main=$('#mainLayout');main.classList.remove('split','map-only');if(state.view==='split')main.classList.add('split');if(state.view==='map')main.classList.add('map-only');
  $('#mapPane').style.display=(state.view==='list')?'none':'';
- renderMapState(); buildSources();
+ renderMapState(); buildSources(); updateTopDeck();
  if(state.view!=='list')$('#sourcePopover').classList.remove('open');
 }
 function renderMapState(){
@@ -647,25 +724,36 @@ function openItem(id){
  $('#demoModal').classList.add('open');
 }
 function buildSources(){
- const direct=SOURCES.find(s=>s.direct);direct.kind=(FEED_MODE==='yardlink'&&LIVE_LISTINGS.length)?`${LIVE_LISTINGS.length} parts`:'Ready';
- const api=SOURCES.find(s=>s.api);api.kind=(FEED_MODE==='salvagealert'&&LIVE_LISTINGS.length)?`${LIVE_LISTINGS.length} live`:'Ready';
+ const direct=SOURCES.find(s=>s.direct);direct.kind=YARDLINK_RAW.length?`${YARDLINK_RAW.length} parts`:'Ready';
+ const api=SOURCES.find(s=>s.api);api.kind=LIVE_LISTINGS.length?`${LIVE_LISTINGS.length} live`:'Ready';
  $('#sourceCount').textContent=SOURCES.length;
- $('#sourceRows').innerHTML=SOURCES.map(s=>`<div class="source-row"><span>${escapeHtml(s.name)}</span><span class="source-state">${s.direct&&FEED_MODE==='yardlink'&&LIVE_LISTINGS.length?'Imported':s.api&&FEED_MODE==='salvagealert'&&LIVE_LISTINGS.length?'Live':s.kind}</span></div>`).join('');
+ $('#sourceRows').innerHTML=SOURCES.map(s=>`<div class="source-row"><span>${escapeHtml(s.name)}</span><span class="source-state">${s.direct&&YARDLINK_RAW.length?'Imported':s.api&&LIVE_LISTINGS.length?'Live':s.kind}</span></div>`).join('');
  let group='';$('#sourceRailList').innerHTML=SOURCES.map(s=>{const heading=s.group!==group?`<div class="source-group">${escapeHtml(s.group)}</div>`:'';group=s.group;return `${heading}<div class="source-network-row${s.featured?' featured':''}" title="${escapeHtml(s.name)}"><span class="source-mark">${escapeHtml(s.mark)}</span><span class="source-network-name">${escapeHtml(s.name)}</span><span class="source-network-kind">${escapeHtml(s.kind)}</span></div>`}).join('');
 }
 async function importFeed(file){
  try{
   const text=await file.text();const raw=parseCSV(text);if(!raw.length)throw new Error('No inventory rows found.');
   const rows=raw.map(normalizeFeedRow).filter(Boolean);if(!rows.length)throw new Error('Could not identify part or yard columns.');
-  INTELLIGENCE_BY_ID.clear();LIVE_LISTINGS=rows;FEED_MODE='yardlink';state.mode='Parts';state.sort='distance';$('#sortSelect').value='distance';recomputeDistances();render();
+  YARDLINK_RAW=raw;YARDLINK_LISTINGS=rows;state.mode='Parts';state.sort='price';$('#sortSelect').value='price';$('#feedStatus').innerHTML=`<strong>${raw.length} YardLink rows loaded.</strong> Search a part to cross-reference fitment.`;render();
  }catch(err){alert(`YardLink import failed: ${err.message}`)}
 }
 
+async function importInterchange(file){
+ try{
+  const raw=parseCSV(await file.text());if(!raw.length)throw new Error('No interchange rows found.');
+  const required=['interchange_group','interchange_number','hollander_number','group_id'];
+  if(!raw.some(r=>required.some(k=>clean(r[k]))))throw new Error('Expected an interchange_group/interchange_number/Hollander-number column in the licensed bridge export.');
+  LICENSED_INTERCHANGE=raw.slice(0,10000);
+  $('#partsCommandSub').textContent=`${LICENSED_INTERCHANGE.length} licensed interchange bridge rows loaded for this session.`;
+  $('#interchangeStrip').innerHTML=`<span class="interchange-chip good">${LICENSED_INTERCHANGE.length} licensed rows loaded</span>`;
+ }catch(err){alert(`Interchange import failed: ${err.message}`)}
+}
 async function loadLiveAuctions(options={}){
  const btn=$('#loadAuctionsBtn'), status=$('#auctionStatus');
  const source=$('#auctionSourceSelect').value;
  const query=String(options.query ?? $('#searchInput').value ?? '').trim();
  const clearLocalQuery=options.clearLocalQuery!==false;
+ const silent=options.silent===true;
  btn.disabled=true;
  const oldLabel=btn.textContent;
  btn.textContent=query?'Searching…':'Loading…';
@@ -678,25 +766,23 @@ async function loadLiveAuctions(options={}){
     source,
     page_size:20,
     query,
-    max_price:Number($('#priceSelect').value)||null,
+    max_price:Math.min(100000,Number($('#maxPriceInput').value)||100000),
     smart_min:10
    })
   });
   const payload=await resp.json().catch(()=>({}));
   if(!resp.ok) throw new Error(payload.error||`Backend returned ${resp.status}`);
   const raw=Array.isArray(payload.lots)?payload.lots:pickArrayPayload(payload);
-  INTELLIGENCE_BY_ID.clear();LIVE_LISTINGS=raw.map(normalizeSalvageLot).filter(Boolean);
-  FEED_MODE='salvagealert';
-  state.mode='Vehicles';
-  state.sort='score';
+  INTELLIGENCE_BY_ID.clear();LIVE_LISTINGS=raw.map(normalizeSalvageLot).filter(Boolean);AUCTION_SEARCHED=true;
+  if(!silent){state.mode='Vehicles';state.sort='score';}
   if(clearLocalQuery) state.query='';
-  $('#sortSelect').value='score';
+  if(!silent)$('#sortSelect').value='score';
   const qNote=query?` for “${escapeHtml(query)}”`:'';
   const sourceSummary=(payload.sources||[]).map(s=>`${s.name||s.source}: ${s.ok?(s.verified_count??0)+' match'+((s.verified_count??0)===1?'':'es'):'error'}`).join(' · ');
   status.innerHTML=LIVE_LISTINGS.length
     ? `<strong>${LIVE_LISTINGS.length} verified live auction match${LIVE_LISTINGS.length===1?'':'es'} loaded${qNote}.</strong>${sourceSummary?`<br>${escapeHtml(sourceSummary)}`:''}`
     : `<strong>No verified live matches found${qNote}.</strong>${sourceSummary?`<br>${escapeHtml(sourceSummary)}`:''}<br>Try another source or a broader model search.`;
-  render();
+  if(!silent)render();updateTopDeck();
  }catch(err){
   status.textContent=`Live API search failed: ${err.message}`;
   alert(`TRIAD live auction search failed: ${err.message}`);
@@ -709,49 +795,38 @@ function downloadTemplate(){
  const csv='yard_name,stock_number,year,make,model,engine,part_description,price,mileage,condition,interchange_number,city,state,zip,phone,yard_lat,yard_lon,listing_url,image_url\n';
  const blob=new Blob([csv],{type:'text/csv'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='TRIAD_YardLink_Recyclers_Template.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
-$('#searchInput').addEventListener('input',e=>{
- state.query=e.target.value;
- // YardLink and prototype feeds remain instant/local. Live auctions wait for Enter.
- if(FEED_MODE!=='salvagealert') render();
-});
-$('#searchInput').addEventListener('keydown',e=>{
- if(e.key!=='Enter') return;
- e.preventDefault();
- const q=e.currentTarget.value.trim();
- if(state.mode==='Parts' && FEED_MODE==='yardlink'){state.query=q;render();return}
- loadLiveAuctions({query:q,clearLocalQuery:true});
-});
-$$('#modeSegment button').forEach(b=>b.addEventListener('click',()=>{state.mode=b.dataset.mode;render()}));
+$('#searchInput').addEventListener('input',e=>{state.query=e.target.value});
+$('#searchInput').addEventListener('keydown',e=>{if(e.key!=='Enter')return;e.preventDefault();runPrimarySearch(e.currentTarget.value.trim())});
+$$('#modeSegment button').forEach(b=>b.addEventListener('click',()=>{state.mode=b.dataset.mode;state.sort=state.mode==='Parts'?'price':'score';$('#sortSelect').value=state.sort;render()}));
 $$('#viewSegment button').forEach(b=>b.addEventListener('click',()=>{state.view=b.dataset.view;render()}));
 $('#sortSelect').addEventListener('change',e=>{state.sort=e.target.value;render()});
 $('#applyBtn').addEventListener('click',()=>{
- state.radius=Number($('#radiusSelect').value);
- state.maxPrice=Number($('#priceSelect').value);
- closeFilters();
- if(FEED_MODE==='salvagealert' && state.mode==='Vehicles'){
-  loadLiveAuctions({query:$('#searchInput').value.trim(),clearLocalQuery:true});
- }else render();
+ state.radius=Number($('#radiusSelect').value);state.minPrice=Math.max(0,Number($('#minPriceInput').value)||0);state.maxPrice=Math.min(100000,Math.max(state.minPrice,Number($('#maxPriceInput').value)||100000));closeFilters();runPrimarySearch($('#searchInput').value.trim());
 });
-$('#resetBtn').addEventListener('click',()=>{state={mode:LIVE_LISTINGS.length?(FEED_MODE==='salvagealert'?'Vehicles':'Parts'):'Everything',view:'list',query:'',radius:250,maxPrice:10000,sort:LIVE_LISTINGS.length?'distance':'score'};$('#searchInput').value='';$('#radiusSelect').value='250';$('#priceSelect').value='10000';$('#sortSelect').value=state.sort;render()});
+$('#resetBtn').addEventListener('click',()=>{state={mode:'Parts',view:'list',query:'',radius:250,minPrice:0,maxPrice:100000,sort:'price'};$('#searchInput').value='';$('#radiusSelect').value='250';$('#minPriceInput').value='0';$('#maxPriceInput').value='100000';$('#sortSelect').value='price';$('#locationInput').value=DEFAULT_LOCATION;render()});
 $('#loadAuctionsBtn').addEventListener('click',loadLiveAuctions);
 $('#importFeedBtn').addEventListener('click',()=>$('#yardFeedInput').click());
+$('#importInterchangeBtn').addEventListener('click',()=>$('#interchangeInput').click());
 $('#yardFeedInput').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(f)importFeed(f);e.target.value=''});
+$('#interchangeInput').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(f)importInterchange(f);e.target.value=''});
 $('#downloadTemplateBtn').addEventListener('click',downloadTemplate);
 $('#useLocationBtn').addEventListener('click',()=>{
  if(!navigator.geolocation){alert('Location is not available in this browser.');return}
  $('#useLocationBtn').textContent='Locating…';
  navigator.geolocation.getCurrentPosition(pos=>{userLocation={lat:pos.coords.latitude,lon:pos.coords.longitude};$('#locationInput').value='Current location';$('#useLocationBtn').textContent='Location active';recomputeDistances();render()},err=>{$('#useLocationBtn').textContent='Use my location';alert(`Could not use your location: ${err.message}`)},{enableHighAccuracy:false,timeout:10000,maximumAge:300000});
 });
-$('#clearFeedBtn').addEventListener('click',()=>{INTELLIGENCE_BY_ID.clear();LIVE_LISTINGS=[];FEED_MODE='demo';userLocation=null;state={mode:'Everything',view:'list',query:'',radius:250,maxPrice:10000,sort:'score'};$('#sortSelect').value='score';$('#locationInput').value='McAllen, TX';$('#useLocationBtn').textContent='Use my location';render()});
+$('#clearFeedBtn').addEventListener('click',()=>{INTELLIGENCE_BY_ID.clear();LIVE_LISTINGS=[];PART_RESULTS=[];YARDLINK_RAW=[];YARDLINK_LISTINGS=[];LICENSED_INTERCHANGE=[];PARTS_META=null;AUCTION_SEARCHED=false;PARTS_SEARCHED=false;userLocation=null;state={mode:'Parts',view:'list',query:'',radius:250,minPrice:0,maxPrice:100000,sort:'price'};$('#sortSelect').value='price';$('#locationInput').value=DEFAULT_LOCATION;$('#minPriceInput').value='0';$('#maxPriceInput').value='100000';$('#useLocationBtn').textContent='Use my location';$('#feedStatus').textContent='No direct recycler inventory loaded.';render()});
 $('#sourceBtn').addEventListener('click',e=>{e.stopPropagation();const wide=window.matchMedia('(min-width:1321px)').matches&&state.view==='list';if(wide){const main=$('#mainLayout');main.classList.toggle('sources-hidden');const visible=!main.classList.contains('sources-hidden');$('#sourceBtn').setAttribute('aria-expanded',String(visible));$('#sourcePopover').classList.remove('open')}else{const p=$('#sourcePopover');p.classList.toggle('open');$('#sourceBtn').setAttribute('aria-expanded',p.classList.contains('open'))}});
 document.addEventListener('click',e=>{if(!e.target.closest('.source-wrap')){$('#sourcePopover').classList.remove('open');$('#sourceBtn').setAttribute('aria-expanded','false')}});
 $('#hideSourceRail').addEventListener('click',()=>{$('#mainLayout').classList.add('sources-hidden');$('#sourceBtn').setAttribute('aria-expanded','false')});
-$('#vehiclePill').addEventListener('click',()=>{alert('Vehicle profiles are next. The YardLink live test currently searches the direct feed text and fitment fields.')});
+$('#vehiclePill').addEventListener('click',()=>{alert(`Current parts vehicle: ${CURRENT_VEHICLE.year} ${CURRENT_VEHICLE.make} ${CURRENT_VEHICLE.model} ${CURRENT_VEHICLE.engine}. Vehicle-profile editing is the next UI control.`)});
 function openFilters(){$('#filtersPanel').classList.add('open');$('#drawerBackdrop').classList.add('open')}function closeFilters(){$('#filtersPanel').classList.remove('open');$('#drawerBackdrop').classList.remove('open')}
 $('#mobileFilter').addEventListener('click',openFilters);$('#drawerBackdrop').addEventListener('click',closeFilters);
 $('#closeModal').addEventListener('click',()=>$('#demoModal').classList.remove('open'));$('#demoModal').addEventListener('click',e=>{if(e.target.id==='demoModal')e.currentTarget.classList.remove('open')});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeFilters();$('#sourcePopover').classList.remove('open');$('#demoModal').classList.remove('open')}});
-buildSources();render();
+try{const saved=localStorage.getItem('triad_default_location');if(saved)$('#locationInput').value=saved}catch{}
+$('#locationInput').addEventListener('change',()=>{try{localStorage.setItem('triad_default_location',$('#locationInput').value.trim()||DEFAULT_LOCATION)}catch{}});
+buildSources();render();updateTopDeck();
 </script>
 </body>
 </html>

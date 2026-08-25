@@ -1,0 +1,2 @@
+interchange_group,part_type,year,make,model,trim,engine,transmission,position,oem_part_number,qualifier,confidence
+DEMO-GROUP,Transmission,2009,Chevrolet,Silverado 1500,,5.3L,6L80,,,licensed normalized bridge example,1

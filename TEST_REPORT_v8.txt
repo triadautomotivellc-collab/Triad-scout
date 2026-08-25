@@ -1,3 +1,36 @@
+TRIAD SCOUT v0.8 PARTS INTELLIGENCE TEST REPORT
+================================================
+
+RESULT: PASS
+Automated tests passed: 69
+Failures: 0
+
+Additional production-safe parts self-test: 5/5 PASS
+
+Validated areas:
+- JavaScript syntax for all runtime APIs and shared cores
+- index.html inline script compilation
+- Parts default UI contract
+- $0-$100,000 price defaults
+- McAllen, TX default-location fallback
+- Front-and-center donor feed/fee/interchange/rebuild command deck
+- 6L80/part alias parsing
+- LH/RH position parsing
+- Licensed interchange group resolution
+- Cross-year/make/model donor expansion
+- OEM/interchange/exact-donor compatibility ranking
+- Wrong part type rejection
+- Landed-cost ranking (price + shipping + core)
+- Rebuild basket unresolved-item handling
+- YardLink + licensed interchange parts API
+- Authorized connector payload contract
+- Disabled-until-configured Hollander/Car-Part/EDEN adapters
+- Copart fee preview
+- IAA unknown-fee guard
+- All previous vehicle-search and auction-intelligence regression tests
+
+RAW TEST OUTPUT
+---------------
 
 > triad-scout@0.8.0-alpha test
 > npm run check && node --test tests/*.test.mjs
@@ -431,3 +464,4 @@ ok 69 - intelligence profile does not silently invent tax or salvage resale disc
 # skipped 0
 # todo 0
 # duration_ms 265.031729
+
