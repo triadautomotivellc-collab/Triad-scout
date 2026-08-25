@@ -14,6 +14,48 @@ function extractLots(payload) {
   return [];
 }
 
+const MAKE_ALIASES = {
+  ford:'FORD', chevy:'CHEVROLET', chevrolet:'CHEVROLET', gmc:'GMC',
+  cadillac:'CADILLAC', buick:'BUICK', pontiac:'PONTIAC', dodge:'DODGE',
+  ram:'RAM', chrysler:'CHRYSLER', jeep:'JEEP', lincoln:'LINCOLN',
+  mercury:'MERCURY', toyota:'TOYOTA', lexus:'LEXUS', honda:'HONDA',
+  acura:'ACURA', nissan:'NISSAN', infiniti:'INFINITI', mazda:'MAZDA',
+  subaru:'SUBARU', mitsubishi:'MITSUBISHI', hyundai:'HYUNDAI', kia:'KIA',
+  bmw:'BMW', mercedes:'MERCEDES-BENZ', 'mercedes-benz':'MERCEDES-BENZ',
+  audi:'AUDI', volkswagen:'VOLKSWAGEN', vw:'VOLKSWAGEN', volvo:'VOLVO',
+  tesla:'TESLA', porsche:'PORSCHE', jaguar:'JAGUAR', landrover:'LAND ROVER',
+  'land rover':'LAND ROVER', mini:'MINI'
+};
+
+function queryFilters(text) {
+  if (!text) return {};
+  const lower = text.toLowerCase();
+  let make = null;
+  for (const [alias, canonical] of Object.entries(MAKE_ALIASES)) {
+    if (new RegExp(`(^|\\s)${alias.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}(\\s|$)`,'i').test(lower)) {
+      make = canonical; break;
+    }
+  }
+  const years = [...text.matchAll(/\b(19\d{2}|20\d{2})\b/g)].map(m=>Number(m[1]));
+  const out = { text };
+  if (make) out.makes = [make];
+  if (years.length === 1) { out.year_min = years[0]; out.year_max = years[0]; }
+  else if (years.length >= 2) { out.year_min = Math.min(...years); out.year_max = Math.max(...years); }
+  return out;
+}
+
+async function callSearch(key, body) {
+  return fetch('https://salvagealert.com/api/v1/lots/search', {
+    method:'POST',
+    headers:{
+      'Authorization':`Bearer ${key}`,
+      'Content-Type':'application/json',
+      'Accept':'application/json'
+    },
+    body:JSON.stringify(body)
+  });
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -27,6 +69,9 @@ export default async function handler(req, res) {
 
   const requested = String(req.body?.source || 'copart_us');
   const pageSize = Math.max(1, Math.min(30, Number(req.body?.page_size || 20)));
+  const query = String(req.body?.query || '').trim().slice(0, 120);
+  const maxPriceRaw = Number(req.body?.max_price);
+  const maxPrice = Number.isFinite(maxPriceRaw) && maxPriceRaw > 0 ? maxPriceRaw : null;
   const sources = requested === 'all'
     ? ['copart_us','iaai_us','govdeals_us']
     : [requested];
@@ -40,20 +85,27 @@ export default async function handler(req, res) {
 
   for (const source of sources) {
     try {
-      const upstream = await fetch('https://salvagealert.com/api/v1/lots/search', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${key}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({ source, page_size: pageSize })
-      });
+      const searchBody = { source, page_size: pageSize, ...queryFilters(query) };
+      if (maxPrice) searchBody.price_max = maxPrice;
 
-      const text = await upstream.text();
+      let upstream = await callSearch(key, searchBody);
+      let text = await upstream.text();
       let data = {};
       try { data = text ? JSON.parse(text) : {}; }
       catch { data = { raw: text.slice(0, 800) }; }
+
+      // If the provider rejects the generic text field, retry once with structured filters only.
+      // This keeps make/year searches working while remaining compatible with stricter API schemas.
+      if (!upstream.ok && query && [400, 422].includes(upstream.status)) {
+        const fallbackBody = { source, page_size: pageSize, ...queryFilters(query) };
+        delete fallbackBody.text;
+        if (maxPrice) fallbackBody.price_max = maxPrice;
+        upstream = await callSearch(key, fallbackBody);
+        text = await upstream.text();
+        data = {};
+        try { data = text ? JSON.parse(text) : {}; }
+        catch { data = { raw: text.slice(0, 800) }; }
+      }
 
       if (!upstream.ok) {
         sourceStatus.push({ source, ok: false, status: upstream.status, error: data?.detail || data?.error || 'Upstream request failed' });
@@ -85,6 +137,7 @@ export default async function handler(req, res) {
     ok: true,
     live: true,
     provider: 'SalvageAlert',
+    query,
     lots,
     sources: sourceStatus
   });
