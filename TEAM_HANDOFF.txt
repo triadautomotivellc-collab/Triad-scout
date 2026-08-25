@@ -1,0 +1,945 @@
+TRIAD SCOUT — CURRENT LIVE BUILD + MULTI-AI ENGINEERING HANDOFF
+=================================================================
+
+LIVE APPLICATION — SOURCE OF TRUTH FOR CURRENT PRODUCT
+------------------------------------------------------
+https://triad-scout.pepsog.chatgpt.site
+
+IMPORTANT:
+This is the CURRENT deployed TRIAD Scout application/site.
+
+Do NOT treat TRIAD Scout as a hypothetical concept.
+Do NOT redesign or replace the product before inspecting the live application.
+Open the live site first, understand its current information architecture and behavior, then review the supplied source code if provided.
+
+The current deployed UI presents TRIAD Scout as a PC-first vehicle sourcing tool with:
+- Find Vehicles
+- Watchlist
+- Post Vehicle
+- Sources
+- Search by year / make / model / VIN / vehicle keyword
+- ZIP origin
+- Radius filtering
+- Six enabled vehicle/auction sources
+- Public listing links
+- Result verification on the original listing
+
+The currently visible source abbreviations correspond to the present auction/public sourcing lane:
+- Copart
+- IAA
+- HiBid
+- AuctionZip
+- GovDeals
+- Public Surplus
+
+The existing visual identity and navigation should be PRESERVED unless a functional change clearly requires modification.
+
+=================================================================
+TEAM MISSION
+=================================================================
+
+You are joining a multi-AI engineering team working on TRIAD Scout for TRIAD Automotive.
+
+Other independent reviewers include ChatGPT, Claude, Gemini, and Meta AI.
+
+Your assignment is NOT simply to brainstorm features.
+
+Your job is to independently:
+1. Open and inspect the CURRENT live TRIAD Scout application.
+2. If source code is supplied, audit the actual current implementation.
+3. Test its search behavior where technically possible.
+4. Determine which sources genuinely return usable inventory.
+5. Identify placeholders, fake results, dead connectors, parsing failures, and architectural weak points.
+6. Expand TRIAD Scout from vehicle sourcing into a unified VEHICLE + AUTOMOTIVE PARTS sourcing engine.
+7. Produce concrete fixes, patches, connector designs, and test evidence.
+8. Preserve good existing architecture and UI instead of replacing working systems unnecessarily.
+
+Evidence beats confidence.
+Do not say a connector works unless you actually validate that it produces useful listings.
+
+=================================================================
+WHAT TRIAD SCOUT IS BECOMING
+=================================================================
+
+TRIAD Scout should become one automotive sourcing intelligence layer.
+
+The user searches ONCE.
+
+TRIAD Scout searches every appropriate enabled source.
+
+It then:
+- normalizes listings
+- removes duplicates
+- estimates real acquisition cost
+- ranks opportunities
+- identifies local / cheap / high-margin options
+- links back to the original listing for verification
+
+The user should not have to manually search 10–20 websites.
+
+The platform has two major search domains:
+
+A. VEHICLE SCOUT
+B. PARTS SCOUT
+
+=================================================================
+A. VEHICLE SCOUT
+=================================================================
+
+The existing live application already focuses on vehicle sourcing.
+
+Example query:
+
+2015–2020 Ford Explorer
+Maximum purchase price: $4,000
+Within 250 miles
+
+Potential normalized vehicle fields:
+
+VehicleListing
+- Source
+- SourceListingId
+- URL
+- Year
+- Make
+- Model
+- Trim
+- VIN
+- Mileage
+- CurrentPrice
+- BuyNowPrice
+- EstimatedFees
+- EstimatedTransport
+- EstimatedTotalCost
+- TitleStatus
+- PrimaryDamage
+- SecondaryDamage
+- City
+- State
+- ZIP
+- DistanceMiles
+- SellerType
+- AuctionEnd
+- EstimatedRetail
+- EstimatedRepair
+- EstimatedProfit
+- Photos[]
+- OpportunityScore
+- DateDiscovered
+- DateUpdated
+
+Current / target vehicle sourcing lanes include:
+
+DEALER / LICENSED / ACCOUNT-BASED
+- Copart
+- IAA
+- Manheim
+- ADESA
+- EDGE Pipeline
+- EBlock
+- SmartAuction
+
+PUBLIC AUCTION RADAR
+- HiBid
+- AuctionZip
+- GovDeals
+- Public Surplus
+- GSA Auctions
+- Municibid
+- Proxibid
+- Purple Wave
+- local municipal auctions
+- police impound auctions
+- tow-company auctions
+- county auctions
+- school district surplus
+- university fleet sales
+- city fleet sales
+- utility surplus
+- local auction houses
+- estate auctions containing vehicles
+- publicly available repossession/fleet opportunities
+
+Do NOT assume every source uses the same access model.
+
+Classify each connector as appropriate:
+
+PUBLIC
+PUBLIC_WITH_LIMITATIONS
+ACCOUNT_REQUIRED
+DEALER_LICENSE_REQUIRED
+API_AVAILABLE
+BROWSER_SESSION_REQUIRED
+UNAVAILABLE
+
+Never represent account-only data as anonymously available.
+
+=================================================================
+B. PARTS SCOUT — NEW CORE PRODUCT REQUIREMENT
+=================================================================
+
+Automotive parts sourcing is now a FIRST-CLASS TRIAD Scout function.
+
+A user should be able to search:
+
+"I need a 6L80 for a 2010 Silverado 5.3 under $1,200 within 300 miles."
+
+or:
+
+"Find an LQ4 6.0 complete engine under $1,500."
+
+or:
+
+"Find a right-side turbo for a 2015 Ford Explorer Sport."
+
+or:
+
+"Find a rear differential for a 2007 Trailblazer SS."
+
+TRIAD Scout should plan the query and search the appropriate sources automatically.
+
+=================================================================
+MANDATORY PARTS SOURCES
+=================================================================
+
+1. CAR-PART.COM
+----------------
+
+Car-Part.com must be treated as a critical used OEM / salvage parts source.
+
+Use cases include:
+- engines
+- transmissions
+- transfer cases
+- differentials
+- axle assemblies
+- doors
+- hoods
+- fenders
+- bumpers
+- headlights
+- wheels
+- seats
+- electronic modules
+- body assemblies
+- drivetrain parts
+
+Capture where available:
+- part description
+- donor year
+- donor make/model
+- mileage
+- condition
+- interchange information
+- OEM/interchange number
+- salvage yard
+- location
+- distance
+- price
+- contact details
+- listing / inquiry link
+
+Do NOT assume unrestricted API access.
+Determine the most legitimate and reliable supported retrieval method.
+
+2. EBAY / EBAY MOTORS
+----------------------
+
+eBay should be a major source for new, used, OEM, aftermarket, discontinued, performance, and specialty parts.
+
+Capture where available:
+- title
+- price
+- shipping
+- total delivered cost
+- condition
+- fitment / compatibility
+- seller
+- seller rating
+- seller location
+- item number
+- photos
+- returns
+- delivery estimate
+
+Prefer official/public APIs or supported structured methods where appropriate.
+
+3. CRAIGSLIST
+-------------
+
+Craigslist must be supported for BOTH vehicles and parts where public access allows.
+
+Important categories include:
+- cars & trucks
+- auto parts
+- wheels / tires
+- automotive equipment where applicable
+
+Craigslist is MARKET / LOCATION oriented.
+
+TRIAD Scout should search relevant surrounding markets based on the user's origin and radius instead of treating Craigslist as one national database.
+
+Do not build an anti-bot bypass system.
+Use reasonable, permitted access methods and gracefully report when a market/source cannot be searched.
+
+=================================================================
+OTHER PARTS SOURCES TO INVESTIGATE
+=================================================================
+
+Evaluate practical integration value for:
+
+- LKQ
+- Pick-n-Pull
+- local salvage yards
+- Hollander-powered recycler inventories
+- recycler/salvage websites
+- RockAuto
+- Summit Racing
+- JEGS
+- Speedway Motors
+- PartsGeek
+- Advance Auto Parts
+- AutoZone
+- O'Reilly Auto Parts
+- NAPA
+- Walmart automotive marketplace when useful
+- OEM manufacturer catalogs
+- dealership parts catalogs
+- specialty dismantlers
+- performance-parts retailers
+- Facebook Marketplace only where legitimately accessible
+- OfferUp only where legitimately accessible
+
+Do not indiscriminately scrape everything.
+
+For every source, identify the proper acquisition mechanism.
+
+Preferred retrieval order:
+
+1. Official API/feed
+2. Public structured endpoint
+3. Public HTML
+4. Normal browser rendering
+5. Authorized user session
+6. Mark source unavailable
+
+Do NOT implement CAPTCHA defeat, stealth fingerprinting, access-control bypass, or abusive request behavior.
+
+=================================================================
+CONNECTOR ARCHITECTURE
+=================================================================
+
+TRIAD Scout must NOT become one giant generic scraper.
+
+Each source should be isolated behind a connector/adapter.
+
+Conceptual architecture:
+
+Scout.Core
+|
++-- Search
+|   +-- QueryPlanner
+|   +-- VehicleSearch
+|   +-- PartSearch
+|   +-- UnifiedSearch
+|
++-- Sources
+|   +-- Copart
+|   +-- IAA
+|   +-- HiBid
+|   +-- AuctionZip
+|   +-- GovDeals
+|   +-- PublicSurplus
+|   +-- Craigslist
+|   +-- Ebay
+|   +-- CarPart
+|   +-- ...
+|
++-- Normalize
++-- Deduplication
++-- Compatibility
++-- Interchange
++-- Ranking
++-- Valuation
++-- Distance
++-- Transport
++-- Fees
++-- SourceHealth
++-- Cache
+
+Every connector should conceptually expose a normalized contract such as:
+
+SearchAsync(query)
+    -> source-specific retrieval
+    -> parse
+    -> validate
+    -> normalize
+    -> return listings + source health
+
+One source failure MUST NOT fail the entire user search.
+
+=================================================================
+PART LISTING MODEL
+=================================================================
+
+Recommended normalized model:
+
+PartListing
+- Source
+- SourceListingId
+- URL
+
+- PartType
+- PartNumber
+- OEMNumber
+- InterchangeNumber
+
+- Year
+- Make
+- Model
+- Trim
+- Engine
+- Transmission
+- Drivetrain
+
+- Title
+- Description
+
+- Condition
+- Mileage
+
+- Price
+- Shipping
+- CoreCharge
+- TaxEstimate
+- TotalEstimatedCost
+
+- SellerName
+- SellerRating
+- SellerType
+
+- City
+- State
+- ZIP
+- DistanceMiles
+
+- CompatibilityConfidence
+
+- Photos[]
+
+- DateDiscovered
+- DateUpdated
+- AvailabilityStatus
+
+=================================================================
+AUTOMOTIVE QUERY INTELLIGENCE
+=================================================================
+
+TRIAD Scout should understand automotive language.
+
+Example:
+
+"Find a 6L80 for a 2009 Silverado 5.3 within 200 miles under $1,200."
+
+Expected interpretation:
+
+Part:
+Transmission
+
+Transmission family:
+6L80
+
+Vehicle:
+2009 Chevrolet Silverado
+
+Engine:
+5.3L
+
+Maximum cost:
+$1,200
+
+Search radius:
+200 miles
+
+Then route that query to sources where that component is realistically sold.
+
+Search planning should account for:
+- abbreviations
+- engine families
+- transmission families
+- OEM numbers
+- RPO codes
+- interchange
+- generation
+- alternate vehicle applications
+- colloquial automotive names
+
+=================================================================
+INTERCHANGE / FITMENT INTELLIGENCE
+=================================================================
+
+TRIAD Scout should eventually recognize that a valid component may come from another donor vehicle.
+
+Examples:
+- GM engine families
+- GM transmission families
+- Ford engineering numbers
+- OEM supersession
+- transfer-case families
+- axle ratios
+- wheel bolt patterns
+- generation-specific body compatibility
+- Hollander-style interchange relationships
+
+Never claim compatibility merely because listing text looks similar.
+
+Use explicit confidence classes:
+
+EXACT_MATCH
+OEM_CATALOG_MATCH
+INTERCHANGE_MATCH
+LIKELY_MATCH
+UNVERIFIED
+
+=================================================================
+TOTAL ACQUISITION COST
+=================================================================
+
+Do NOT rank inventory by sticker price alone.
+
+Example:
+
+PART PRICE          $700
+SHIPPING            $250
+CORE                $150
+-------------------------
+EST. LANDED COST  $1,100
+
+A $700 transmission hundreds of miles away may be worse than an $850 unit nearby.
+
+For complete vehicles consider:
+- purchase/bid price
+- auction fees
+- buyer fees
+- transport
+- title fees
+- estimated repair
+- likely retail
+- projected gross margin
+
+=================================================================
+DEDUPLICATION
+=================================================================
+
+The same item may appear on:
+- Car-Part
+- eBay
+- seller's own website
+- Craigslist
+- an auction network
+
+Potential duplicate signals:
+
+Vehicles:
+- VIN
+- seller
+- photos
+- price
+- mileage
+- location
+- year/make/model
+
+Parts:
+- OEM number
+- interchange number
+- seller
+- donor vehicle
+- description
+- photos
+- price
+- location
+
+Do not present five copies of one physical item as five opportunities.
+
+=================================================================
+SOURCE HEALTH
+=================================================================
+
+Every connector must report a real state.
+
+Suggested statuses:
+
+HEALTHY
+DEGRADED
+RATE_LIMITED
+AUTH_REQUIRED
+BLOCKED
+PARSER_ERROR
+SITE_CHANGED
+OFFLINE
+UNKNOWN
+
+CRITICAL REQUIREMENT:
+
+The UI must distinguish:
+
+"No matching inventory was found"
+
+from:
+
+"The source failed and therefore returned no inventory."
+
+Never silently convert an error into zero results.
+
+Example:
+
+Sources searched: 8
+Successful: 6
+Unavailable: 2
+
+Car-Part      HEALTHY
+eBay          HEALTHY
+Craigslist    HEALTHY
+GovDeals      HEALTHY
+HiBid         DEGRADED
+AuctionZip    PARSER_ERROR
+PublicSurplus HEALTHY
+Copart        AUTH/PUBLIC-LIMITATION
+
+=================================================================
+LIVE TEST MISSION
+=================================================================
+
+TEST THE CURRENT BUILD.
+
+Do not only read the code.
+
+Open:
+https://triad-scout.pepsog.chatgpt.site
+
+Then perform real testing where technically possible.
+
+Minimum test set:
+
+VEHICLE TEST 1
+2015–2020 Ford Explorer
+Maximum $5,000
+
+VEHICLE TEST 2
+2007–2014 Chevrolet Silverado
+Maximum $7,500
+
+PART TEST 1
+LQ4 6.0L engine
+
+PART TEST 2
+6L80 transmission
+
+PART TEST 3
+2015 Ford Explorer Sport right-side turbocharger
+
+PART TEST 4
+2007 Trailblazer SS rear differential
+
+Evaluate:
+- query interpretation
+- source routing
+- result count
+- URLs
+- real listing validity
+- parsing
+- normalization
+- distance
+- pricing
+- duplicate handling
+- failure behavior
+- UI rendering
+
+=================================================================
+SOURCE TEST MATRIX
+=================================================================
+
+Test/assess at minimum:
+
+Copart
+IAA
+HiBid
+AuctionZip
+GovDeals
+Public Surplus
+Craigslist
+eBay
+Car-Part.com
+
+For each return:
+
+Source
+Search type
+Retrieval method
+Query
+HTTP/browser success
+Listings retrieved
+Listings actually usable
+Latency if measurable
+Failure reason
+Current implementation status
+Recommended fix
+
+Do NOT mark a connector WORKING merely because an HTTP request returned 200.
+
+WORKING means TRIAD Scout retrieved useful real inventory and normalized it correctly.
+
+=================================================================
+FAILURE INVESTIGATION
+=================================================================
+
+When a source fails, determine the actual class of failure.
+
+Possible causes:
+- DNS
+- TLS
+- timeout
+- source blocking
+- rate limiting
+- authentication required
+- JavaScript rendering required
+- region/session required
+- bad URL generation
+- incorrect selector
+- stale parser
+- HTML/site redesign
+- serialization error
+- API change
+- backend exception
+- frontend exception
+- malformed normalized listing
+
+Report the actual cause when evidence is available.
+
+=================================================================
+OPPORTUNITY SCORING
+=================================================================
+
+TRIAD Scout should ultimately rank results by value to an automotive buyer.
+
+PARTS factors:
+- price
+- landed price
+- distance
+- compatibility confidence
+- condition
+- mileage
+- seller confidence
+- availability
+
+VEHICLE factors:
+- acquisition price
+- market value
+- repair exposure
+- fees
+- transportation
+- local resale demand
+- projected margin
+- title/damage risk
+
+Possible user-facing flags:
+
+GREAT BUY
+BELOW MARKET
+LOCAL
+CHEAP SHIPPING
+HIGH MARGIN
+UNKNOWN COMPATIBILITY
+HIGH SHIPPING
+CORE REQUIRED
+SALVAGE / DAMAGE
+AUCTION FEES NOT INCLUDED
+SOURCE UNVERIFIED
+
+=================================================================
+UI REQUIREMENT
+=================================================================
+
+The existing TRIAD Scout deployment is the design baseline.
+
+Current main navigation includes:
+- Find Vehicles
+- Watchlist
+- Post Vehicle
+- Sources
+
+Do not replace the visual identity or rebuild the entire frontend just because another framework is preferred.
+
+Extend the existing product cleanly.
+
+A logical future structure could include:
+
+TRIAD SCOUT
+
+SEARCH
+- Vehicles
+- Parts
+- Everything
+
+WATCHLIST
+
+POST VEHICLE
+
+SOURCES
+- Auctions
+- Marketplaces
+- Salvage Yards
+- Retail Parts
+
+TOOLS
+- VIN
+- Compatibility
+- Interchange
+- Transport
+- Profit Calculator
+
+But preserve current working UX unless change is justified.
+
+=================================================================
+REQUIRED REVIEW RESPONSE
+=================================================================
+
+Return your review in this structure:
+
+1. EXECUTIVE FINDING
+
+What percentage of the current application appears:
+- Working
+- Partially working
+- Placeholder
+- Broken
+
+Do not sugarcoat it.
+
+2. CURRENT LIVE APP OBSERVATIONS
+
+Describe what the deployed application actually does today.
+
+Separate:
+- observable working behavior
+- UI-only behavior
+- unverified backend behavior
+
+3. LIVE TEST RESULTS
+
+Show the actual searches attempted and outcomes.
+
+4. SOURCE MATRIX
+
+For each source:
+- Current status
+- Retrieval method
+- Vehicle usefulness
+- Parts usefulness
+- Access requirement
+- Reliability
+- Needed fix
+
+5. CODE / ARCHITECTURE AUDIT
+
+If code is supplied, identify:
+- files
+- classes/functions
+- bugs
+- fragile assumptions
+- parser problems
+- concurrency issues
+- exception handling failures
+- duplicated architecture
+- security issues
+
+6. PARTS SCOUT AUDIT
+
+Give special attention to:
+- Car-Part.com
+- eBay
+- Craigslist
+
+7. BUGS
+
+For each bug provide:
+- File
+- Function/class
+- Failure
+- Cause
+- Fix
+
+8. CODE CONTRIBUTIONS
+
+Provide targeted production-quality patches where evidence supports them.
+
+Avoid rewriting unrelated systems.
+
+9. NEW CONNECTORS
+
+Priority:
+1. Car-Part.com
+2. eBay
+3. Craigslist
+
+Then recommend the next five highest-value automotive sources.
+
+10. NEXT RELEASE
+
+Recommend ONE coherent next build.
+
+Preferred direction:
+
+TRIAD Scout vNext
+UNIFIED VEHICLE + PARTS SEARCH
+
+The release should strengthen the current vehicle sourcing system while adding a real Parts Scout foundation.
+
+=================================================================
+MULTI-AI TEAM RULE
+=================================================================
+
+ChatGPT, Claude, Gemini, and Meta AI may independently review the same live application and code.
+
+Do NOT agree with another reviewer simply because they sound confident.
+
+Independently verify claims.
+
+When another reviewer is wrong:
+- identify the claim
+- explain the evidence
+- propose the correction
+
+When another reviewer discovers something useful:
+- validate it
+- improve it if possible
+
+The final implementation will combine the strongest verified findings.
+
+=================================================================
+PRIMARY OBJECTIVE
+=================================================================
+
+Turn the CURRENT deployed TRIAD Scout application:
+
+https://triad-scout.pepsog.chatgpt.site
+
+into a robust automotive sourcing intelligence platform where one query can find:
+
+VEHICLES
++
+USED OEM PARTS
++
+NEW PARTS
++
+SALVAGE INVENTORY
++
+AUCTION INVENTORY
++
+LOCAL MARKETPLACE INVENTORY
+
+then normalize, compare, deduplicate, calculate acquisition cost, and rank the best opportunities.
+
+Craigslist, eBay, and Car-Part.com are mandatory first-class Parts Scout targets.
+
+DO NOT lose the current TRIAD Scout identity while expanding it.
