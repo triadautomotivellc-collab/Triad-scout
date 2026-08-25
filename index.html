@@ -185,7 +185,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
    <button type="button" data-mode="Parts">Parts</button>
    <button type="button" data-mode="Everything" class="active">Everything</button>
   </div>
-  <span class="prototype-note">Live connectors test · SalvageAlert API + YardLink direct recycler feeds</span>
+  <span class="prototype-note">Live search · SalvageAlert auctions + YardLink recycler feeds</span>
  </div>
  <div class="segment view-segment" id="viewSegment" aria-label="View mode">
   <button type="button" data-view="list" class="active">List</button>
@@ -215,7 +215,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   <button class="reset-btn" id="resetBtn" type="button">Reset prototype filters</button>
   <div class="yardlink-box" id="auctionApiBox">
    <div class="yardlink-head"><span class="yardlink-title">Live Auction Feed</span><span class="yardlink-badge">API</span></div>
-   <p class="yardlink-copy">Authorized live auction data through SalvageAlert. Your API key stays on the private backend, never in this HTML.</p>
+   <p class="yardlink-copy">Authorized live auction data through SalvageAlert. Type a vehicle in the top search bar and press Enter, or load the latest inventory here. Your API key stays on the private backend.</p>
    <div class="yardlink-actions">
     <select class="yardlink-btn" id="auctionSourceSelect" aria-label="Auction source">
      <option value="copart_us">Copart US</option>
@@ -223,7 +223,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
      <option value="govdeals_us">GovDeals US</option>
      <option value="all">All 3 (uses more credits)</option>
     </select>
-    <button class="yardlink-btn primary" id="loadAuctionsBtn" type="button">Load live vehicles</button>
+    <button class="yardlink-btn primary" id="loadAuctionsBtn" type="button">Search live vehicles</button>
    </div>
    <div class="feed-status" id="auctionStatus">Waiting for private backend connection.</div>
   </div>
@@ -523,7 +523,7 @@ function cardTemplate(x){
 function render(){
  const items=filtered(); const live=LIVE_LISTINGS.length>0;
  const apiLive=live&&FEED_MODE==='salvagealert', yardLive=live&&FEED_MODE==='yardlink';
- $('#cards').innerHTML=items.length?items.map(cardTemplate).join(''):`<div class="empty">${apiLive?'No loaded live-auction vehicles match this search.':yardLive?'No direct-feed inventory matches this search.':'No prototype results match these filters.'}</div>`;
+ $('#cards').innerHTML=items.length?items.map(cardTemplate).join(''):`<div class="empty">${apiLive?'No live-auction vehicles matched this search. Try a broader model name or another source.':yardLive?'No direct-feed inventory matches this search.':'No prototype results match these filters.'}</div>`;
  $('#resultsMeta').textContent=apiLive?`${items.length} matching vehicle${items.length===1?'':'s'} · ${LIVE_LISTINGS.length} loaded from SalvageAlert API`:yardLive?`${items.length} matching part${items.length===1?'':'s'} · ${LIVE_LISTINGS.length} imported via YardLink direct feed`:`${items.length} prototype match${items.length===1?'':'es'} · normalized layout · no live connectors`;
  $('#liveFeedBanner').classList.toggle('show',live);
  $('#liveFeedBanner').querySelector('span').innerHTML=apiLive?`<strong>Live auction API</strong> · real auction records loaded through the private backend.`:`<strong>YardLink direct inventory</strong> · results below come from the CSV you imported.`;
@@ -568,43 +568,74 @@ async function importFeed(file){
  }catch(err){alert(`YardLink import failed: ${err.message}`)}
 }
 
-async function loadLiveAuctions(){
+async function loadLiveAuctions(options={}){
  const btn=$('#loadAuctionsBtn'), status=$('#auctionStatus');
  const source=$('#auctionSourceSelect').value;
- btn.disabled=true; btn.textContent='Loading…'; status.textContent='Calling TRIAD private backend…';
+ const query=String(options.query ?? $('#searchInput').value ?? '').trim();
+ const clearLocalQuery=options.clearLocalQuery!==false;
+ btn.disabled=true;
+ const oldLabel=btn.textContent;
+ btn.textContent=query?'Searching…':'Loading…';
+ status.textContent=query?`Searching ${source==='all'?'all live sources':source.replaceAll('_',' ')} for “${query}”…`:'Calling TRIAD private backend…';
  try{
   const resp=await fetch('/api/salvage-search',{
    method:'POST',
    headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({source,page_size:20})
+   body:JSON.stringify({
+    source,
+    page_size:20,
+    query,
+    max_price:Number($('#priceSelect').value)||null
+   })
   });
   const payload=await resp.json().catch(()=>({}));
   if(!resp.ok) throw new Error(payload.error||`Backend returned ${resp.status}`);
   const raw=Array.isArray(payload.lots)?payload.lots:pickArrayPayload(payload);
-  if(!raw.length) throw new Error(payload.message||'API returned no lot records.');
   LIVE_LISTINGS=raw.map(normalizeSalvageLot).filter(Boolean);
   FEED_MODE='salvagealert';
-  state.mode='Vehicles'; state.sort='score';
+  state.mode='Vehicles';
+  state.sort='score';
+  // Server already handled the search; don't filter the returned set a second time.
+  if(clearLocalQuery) state.query='';
   $('#sortSelect').value='score';
-  status.innerHTML=`<strong>${LIVE_LISTINGS.length} live auction records loaded.</strong> Scored from auction price + repair estimate versus ACV when available.`;
+  const qNote=query?` for “${escapeHtml(query)}”`:'';
+  status.innerHTML=`<strong>${LIVE_LISTINGS.length} live auction records loaded${qNote}.</strong> Search ran against SalvageAlert, not just the 20 vehicles already on screen.`;
   render();
  }catch(err){
-  status.textContent=`Live API test failed: ${err.message}`;
-  alert(`TRIAD live auction test failed: ${err.message}`);
+  status.textContent=`Live API search failed: ${err.message}`;
+  alert(`TRIAD live auction search failed: ${err.message}`);
  }finally{
-  btn.disabled=false; btn.textContent='Load live vehicles';
+  btn.disabled=false;
+  btn.textContent=oldLabel||'Load live vehicles';
  }
 }
-
 function downloadTemplate(){
  const csv='yard_name,stock_number,year,make,model,engine,part_description,price,mileage,condition,interchange_number,city,state,zip,phone,yard_lat,yard_lon,listing_url,image_url\n';
  const blob=new Blob([csv],{type:'text/csv'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='TRIAD_YardLink_Recyclers_Template.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
-$('#searchInput').addEventListener('input',e=>{state.query=e.target.value;render()});
+$('#searchInput').addEventListener('input',e=>{
+ state.query=e.target.value;
+ // YardLink and prototype feeds remain instant/local. Live auctions wait for Enter.
+ if(FEED_MODE!=='salvagealert') render();
+});
+$('#searchInput').addEventListener('keydown',e=>{
+ if(e.key!=='Enter') return;
+ e.preventDefault();
+ const q=e.currentTarget.value.trim();
+ if(state.mode==='Parts' && FEED_MODE==='yardlink'){state.query=q;render();return}
+ loadLiveAuctions({query:q,clearLocalQuery:true});
+});
 $$('#modeSegment button').forEach(b=>b.addEventListener('click',()=>{state.mode=b.dataset.mode;render()}));
 $$('#viewSegment button').forEach(b=>b.addEventListener('click',()=>{state.view=b.dataset.view;render()}));
 $('#sortSelect').addEventListener('change',e=>{state.sort=e.target.value;render()});
-$('#applyBtn').addEventListener('click',()=>{state.radius=Number($('#radiusSelect').value);state.maxPrice=Number($('#priceSelect').value);render();closeFilters()});
+$('#applyBtn').addEventListener('click',()=>{
+ state.radius=Number($('#radiusSelect').value);
+ state.maxPrice=Number($('#priceSelect').value);
+ closeFilters();
+ if(FEED_MODE==='salvagealert' && state.mode==='Vehicles'){
+  loadLiveAuctions({query:$('#searchInput').value.trim(),clearLocalQuery:true});
+ }else render();
+});
 $('#resetBtn').addEventListener('click',()=>{state={mode:LIVE_LISTINGS.length?(FEED_MODE==='salvagealert'?'Vehicles':'Parts'):'Everything',view:'list',query:'',radius:250,maxPrice:10000,sort:LIVE_LISTINGS.length?'distance':'score'};$('#searchInput').value='';$('#radiusSelect').value='250';$('#priceSelect').value='10000';$('#sortSelect').value=state.sort;render()});
 $('#loadAuctionsBtn').addEventListener('click',loadLiveAuctions);
 $('#importFeedBtn').addEventListener('click',()=>$('#yardFeedInput').click());
