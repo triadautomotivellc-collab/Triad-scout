@@ -178,7 +178,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
    <button type="button" data-mode="Parts">Parts</button>
    <button type="button" data-mode="Everything" class="active">Everything</button>
   </div>
-  <span class="prototype-note">YardLink direct-feed test · demo cards until a recycler CSV is imported</span>
+  <span class="prototype-note">Live connectors test · SalvageAlert API + YardLink direct recycler feeds</span>
  </div>
  <div class="segment view-segment" id="viewSegment" aria-label="View mode">
   <button type="button" data-view="list" class="active">List</button>
@@ -206,6 +206,20 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   </details>
   <button class="search-btn" id="applyBtn" type="button">Apply filters</button>
   <button class="reset-btn" id="resetBtn" type="button">Reset prototype filters</button>
+  <div class="yardlink-box" id="auctionApiBox">
+   <div class="yardlink-head"><span class="yardlink-title">Live Auction Feed</span><span class="yardlink-badge">API</span></div>
+   <p class="yardlink-copy">Authorized live auction data through SalvageAlert. Your API key stays on the private backend, never in this HTML.</p>
+   <div class="yardlink-actions">
+    <select class="yardlink-btn" id="auctionSourceSelect" aria-label="Auction source">
+     <option value="copart_us">Copart US</option>
+     <option value="iaai_us">IAA US</option>
+     <option value="govdeals_us">GovDeals US</option>
+     <option value="all">All 3 (uses more credits)</option>
+    </select>
+    <button class="yardlink-btn primary" id="loadAuctionsBtn" type="button">Load live vehicles</button>
+   </div>
+   <div class="feed-status" id="auctionStatus">Waiting for private backend connection.</div>
+  </div>
   <div class="yardlink-box">
    <div class="yardlink-head"><span class="yardlink-title">YardLink Direct Feed</span><span class="yardlink-badge">LIVE TEST</span></div>
    <p class="yardlink-copy">Import inventory supplied directly by a recycler. Scout searches that feed locally in your browser — no scraping and no upload to a server.</p>
@@ -243,6 +257,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 <script>
 const DEMO_LISTINGS = [{"id":"pt-1","kind":"PART","score":94,"title":"6L80 Transmission","subtitle":"2009 Silverado 5.3L V8 · 6-speed · 2WD","source":"Car-Part.com","price":950,"total":1285,"distance":67,"city":"McAllen, TX","seller":"ABC Auto Salvage","condition":"Used · Tested","mileage":"112k","fit":"Interchange match","interchange":"6L80 · MYC","photo":"https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=900&h=650&fit=crop","demo":true},{"id":"veh-1","kind":"VEHICLE","score":91,"title":"2018 Ford Explorer XLT","subtitle":"3.5L V6 · 89,420 mi · Clean title · Runs & drives","source":"GovDeals","price":4200,"total":4795,"distance":42,"city":"Pharr, TX","seller":"Government auction","condition":"Clean title","mileage":"89k","fit":"Vehicle match","interchange":"VIN 1FM5K8D82JGA****","photo":"https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=900&h=650&fit=crop","demo":true},{"id":"pt-2","kind":"PART","score":88,"title":"LQ4 6.0L Complete Engine","subtitle":"2003–2007 GM Trucks/SUVs · Long block + intake","source":"eBay Motors","price":1350,"total":1600,"distance":890,"city":"Dallas, TX","seller":"texas_truck_dismantlers","condition":"Used · 90-day warranty","mileage":"146k","fit":"Exact match","interchange":"LQ4 · VIN U","photo":"https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=900&h=650&fit=crop","demo":true},{"id":"veh-2","kind":"VEHICLE","score":87,"title":"2012 Chevrolet Silverado 1500 LT","subtitle":"5.3L V8 · 142k mi · Repairable · Rear damage","source":"Craigslist","price":6850,"total":6935,"distance":18,"city":"Edinburg, TX","seller":"Private seller","condition":"Repairable","mileage":"142k","fit":"Vehicle match","interchange":"VIN 3GCPKSE35CG****","photo":"https://images.unsplash.com/photo-1551830820-330a71b99659?w=900&h=650&fit=crop","demo":true},{"id":"pt-3","kind":"PART","score":79,"title":"Right Turbocharger — Explorer Sport 3.5 EcoBoost","subtitle":"2015 Ford Explorer Sport · OEM DL3Z-6K682-B","source":"Car-Part.com","price":475,"total":585,"distance":214,"city":"Corpus Christi, TX","seller":"Coastal Ford Dismantlers","condition":"Used · OEM","mileage":"68k","fit":"OEM catalog match","interchange":"DL3Z6K682B","photo":"https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=900&h=650&fit=crop","demo":true}];
 const SOURCES = [
+ {name:'SalvageAlert API',mark:'SA',kind:'Ready',group:'Live connectors',featured:true,api:true},
  {name:'YardLink Direct',mark:'YL',kind:'Ready',group:'Direct recycler feeds',featured:true,direct:true},
  {name:'Car-Part.com',mark:'CP',kind:'Parts',group:'Parts & local',featured:true},
  {name:'eBay Motors',mark:'eB',kind:'Market',group:'Parts & local',featured:true},
@@ -268,6 +283,7 @@ const SOURCES = [
  {name:'SmartAuction',mark:'SA',kind:'Dealer',group:'Dealer & salvage'}
 ];
 let LIVE_LISTINGS=[];
+let FEED_MODE='demo';
 let userLocation=null;
 let state={mode:'Everything',view:'list',query:'',radius:250,maxPrice:10000,sort:'score'};
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -316,6 +332,62 @@ function normalizeFeedRow(row,i){
  const subtitle=[year,make,model,engine].filter(Boolean).join(' · ') || [stock?`Stock ${stock}`:'',vin?`VIN ${vin}`:''].filter(Boolean).join(' · ') || 'Direct recycler inventory';
  return {id:`yard-${i}-${stock||Date.now()}`,kind:'PART',score:82,title:part||'Recycler part',subtitle,source,price,total:landed,distance,city:[city,st].filter(Boolean).join(', ')||zip||'Location in feed',seller:seller||'Recycler',condition:cond,mileage:mileage?`${mileage}`:'Mileage n/a',fit,interchange:interchange||stock||'Stock record',photo:validHttpUrl(photo)?photo:placeholder(part),url:validHttpUrl(url)?url:'',phone,address,lat,lon,direct:true,stock,vin};
 }
+
+function firstValue(obj,keys){
+ for(const k of keys){
+  const parts=k.split('.');
+  let v=obj;
+  for(const p of parts){ if(v==null) break; v=v[p]; }
+  if(v!==undefined && v!==null && String(v).trim()!=='') return v;
+ }
+ return null;
+}
+function pickArrayPayload(payload){
+ if(Array.isArray(payload)) return payload;
+ const candidates=['lots','results','items','data','records'];
+ for(const k of candidates){
+  if(Array.isArray(payload?.[k])) return payload[k];
+  if(Array.isArray(payload?.data?.[k])) return payload.data[k];
+ }
+ return [];
+}
+function normalizeSalvageLot(lot,i){
+ const year=firstValue(lot,['year','vehicle.year']);
+ const make=firstValue(lot,['make','vehicle.make'])||'';
+ const model=firstValue(lot,['model','vehicle.model'])||'';
+ const trim=firstValue(lot,['trim','vehicle.trim'])||'';
+ const vin=firstValue(lot,['vin','vehicle.vin'])||'';
+ const sourceRaw=String(firstValue(lot,['source','auction_source','provider'])||'SalvageAlert');
+ const source=sourceRaw.toLowerCase().includes('copart')?'Copart':sourceRaw.toLowerCase().includes('iaa')?'IAA':sourceRaw.toLowerCase().includes('gov')?'GovDeals':sourceRaw;
+ const lotKey=firstValue(lot,['lot_key','lot_number','lot_id','id'])||`live-${i}`;
+ const damage=firstValue(lot,['primary_damage','damage','damage_description','loss_type'])||'Damage details in listing';
+ const odo=firstValue(lot,['odometer','mileage','miles','vehicle.odometer']);
+ const yardObj=firstValue(lot,['yard','location']);
+ const yardName=typeof yardObj==='string'?yardObj:(yardObj?.name||yardObj?.title||'Auction yard');
+ const city=firstValue(lot,['city','yard_city','location.city','yard.city'])||'';
+ const st=firstValue(lot,['state','yard_state','location.state','yard.state'])||'';
+ const priceRaw=firstValue(lot,['buy_now_price','buy_now','price','current_bid','bid','high_bid','sale_price']);
+ const price=num(priceRaw)||0;
+ const acv=num(firstValue(lot,['acv','actual_cash_value','estimated_value']))||price;
+ const seller=firstValue(lot,['seller','seller_name','owner'])||yardName||source;
+ const url=firstValue(lot,['listing_url','url','source_url'])||'';
+ const photos=firstValue(lot,['photos','images','image_urls']);
+ let photo='';
+ if(Array.isArray(photos)&&photos.length){
+  const p=photos[0]; photo=typeof p==='string'?p:(p?.url||p?.src||'');
+ } else photo=firstValue(lot,['photo','image','thumbnail','thumbnail_url','image_url'])||'';
+ const title=[year,make,model,trim].filter(Boolean).join(' ')||`${source} lot ${lotKey}`;
+ const subtitle=[damage, odo?`${odo} mi`:'', vin?`VIN ${String(vin).slice(0,8)}…`:''].filter(Boolean).join(' · ');
+ return {
+  id:`salvage-${sourceRaw}-${lotKey}-${i}`, kind:'VEHICLE', score:80, title, subtitle,
+  source, price, total:price, distance:null, city:[city,st].filter(Boolean).join(', ')||yardName||'Auction location',
+  seller:String(seller), condition:String(damage), mileage:odo?String(odo):'Mileage n/a',
+  fit:'Live auction vehicle', interchange:vin?`VIN ${vin}`:`Lot ${lotKey}`,
+  photo:validHttpUrl(photo)?photo:placeholder(title), url:validHttpUrl(url)?url:'',
+  apiLive:true, lotKey:String(lotKey), vin:String(vin||''), raw:lot
+ };
+}
+
 function activeListings(){return LIVE_LISTINGS.length?LIVE_LISTINGS:DEMO_LISTINGS}
 function recomputeDistances(){if(!LIVE_LISTINGS.length||!userLocation)return;LIVE_LISTINGS=LIVE_LISTINGS.map(x=>({...x,distance:(x.lat!==null&&x.lon!==null)?haversine(userLocation.lat,userLocation.lon,x.lat,x.lon):x.distance}))}
 function filtered(){
@@ -330,9 +402,9 @@ function filtered(){
 }
 function cardTemplate(x){
  const dist=x.distance==null?'Distance n/a':`${Math.round(x.distance)} mi`;
- const action=x.direct?(x.url?'Open yard listing →':x.address?'Directions →':'Yard details →'):'View listing →';
+ const action=x.apiLive?(x.url?'Open auction →':'Live auction details →'):x.direct?(x.url?'Open yard listing →':x.address?'Directions →':'Yard details →'):'View listing →';
  return `<article class="card${x.direct?' direct-feed':''}">
-   <div class="photo"><img src="${escapeHtml(x.photo)}" alt="${escapeHtml(x.title)}" loading="lazy" onerror="this.src='${placeholder('YARDLINK')}'"><span class="kind">${x.direct?'DIRECT FEED':x.kind}</span></div>
+   <div class="photo"><img src="${escapeHtml(x.photo)}" alt="${escapeHtml(x.title)}" loading="lazy" onerror="this.src='${placeholder('TRIAD SCOUT')}'"><span class="kind">${x.apiLive?'LIVE AUCTION':x.direct?'DIRECT FEED':x.kind}</span></div>
    <div class="card-body">
     <div class="topline"><div><div class="title" title="${escapeHtml(x.title)}">${escapeHtml(x.title)}</div><div class="subtitle" title="${escapeHtml(x.subtitle)}">${escapeHtml(x.subtitle)}</div></div><div><div class="price">${money(x.price)}</div><div class="distance">${dist}</div></div></div>
     <div class="midline"><div class="info"><span class="fit">${escapeHtml(x.fit)}</span><span><b>${escapeHtml(x.source)}</b></span><span>${escapeHtml(x.city)}</span><span>${escapeHtml(x.mileage)}</span><span class="landed">Landed <strong>${money(x.total)}</strong></span></div><div class="scorebox"><div class="scoretop"><span class="scorelabel">TRIAD Score</span><span class="scoreval">${x.score}<small>/100</small></span></div><div class="scorebar"><i style="width:${x.score}%"></i></div></div></div>
@@ -342,11 +414,13 @@ function cardTemplate(x){
 }
 function render(){
  const items=filtered(); const live=LIVE_LISTINGS.length>0;
- $('#cards').innerHTML=items.length?items.map(cardTemplate).join(''):`<div class="empty">${live?'No direct-feed inventory matches this search.':'No prototype results match these filters.'}</div>`;
- $('#resultsMeta').textContent=live?`${items.length} matching part${items.length===1?'':'s'} · ${LIVE_LISTINGS.length} imported via YardLink direct feed`:`${items.length} prototype match${items.length===1?'':'es'} · normalized layout · no live connectors`;
+ const apiLive=live&&FEED_MODE==='salvagealert', yardLive=live&&FEED_MODE==='yardlink';
+ $('#cards').innerHTML=items.length?items.map(cardTemplate).join(''):`<div class="empty">${apiLive?'No loaded live-auction vehicles match this search.':yardLive?'No direct-feed inventory matches this search.':'No prototype results match these filters.'}</div>`;
+ $('#resultsMeta').textContent=apiLive?`${items.length} matching vehicle${items.length===1?'':'s'} · ${LIVE_LISTINGS.length} loaded from SalvageAlert API`:yardLive?`${items.length} matching part${items.length===1?'':'s'} · ${LIVE_LISTINGS.length} imported via YardLink direct feed`:`${items.length} prototype match${items.length===1?'':'es'} · normalized layout · no live connectors`;
  $('#liveFeedBanner').classList.toggle('show',live);
- $('#feedStatus').classList.toggle('live',live);
- $('#feedStatus').innerHTML=live?`<strong>${LIVE_LISTINGS.length} inventory rows loaded.</strong> This session is using recycler-supplied data only.`:'Prototype cards are active. Import a real yard CSV to switch the results feed to direct inventory.';
+ $('#liveFeedBanner').querySelector('span').innerHTML=apiLive?`<strong>Live auction API</strong> · real auction records loaded through the private backend.`:`<strong>YardLink direct inventory</strong> · results below come from the CSV you imported.`;
+ $('#feedStatus').classList.toggle('live',yardLive);
+ $('#feedStatus').innerHTML=yardLive?`<strong>${LIVE_LISTINGS.length} inventory rows loaded.</strong> This session is using recycler-supplied data only.`:'Prototype cards are active. Import a real yard CSV to switch the results feed to direct inventory.';
  $$('[data-id]').forEach(b=>b.addEventListener('click',()=>openItem(b.dataset.id)));
  $$('#modeSegment button').forEach(b=>b.classList.toggle('active',b.dataset.mode===state.mode));
  $$('#viewSegment button').forEach(b=>b.classList.toggle('active',b.dataset.view===state.view));
@@ -364,6 +438,7 @@ function renderMapState(){
 }
 function openItem(id){
  const x=activeListings().find(v=>v.id===id);if(!x)return;
+ if(x.apiLive&&x.url){window.open(x.url,'_blank','noopener,noreferrer');return}
  if(x.direct&&x.url){window.open(x.url,'_blank','noopener,noreferrer');return}
  if(x.direct&&x.address){window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(x.address)}`,'_blank','noopener,noreferrer');return}
  $('#demoTitle').textContent=x.direct?'Recycler inventory details':'Prototype listing';
@@ -371,18 +446,48 @@ function openItem(id){
  $('#demoModal').classList.add('open');
 }
 function buildSources(){
- const direct=SOURCES.find(s=>s.direct);direct.kind=LIVE_LISTINGS.length?`${LIVE_LISTINGS.length} parts`:'Ready';
+ const direct=SOURCES.find(s=>s.direct);direct.kind=(FEED_MODE==='yardlink'&&LIVE_LISTINGS.length)?`${LIVE_LISTINGS.length} parts`:'Ready';
+ const api=SOURCES.find(s=>s.api);api.kind=(FEED_MODE==='salvagealert'&&LIVE_LISTINGS.length)?`${LIVE_LISTINGS.length} live`:'Ready';
  $('#sourceCount').textContent=SOURCES.length;
- $('#sourceRows').innerHTML=SOURCES.map(s=>`<div class="source-row"><span>${escapeHtml(s.name)}</span><span class="source-state">${s.direct&&LIVE_LISTINGS.length?'Imported':s.kind}</span></div>`).join('');
+ $('#sourceRows').innerHTML=SOURCES.map(s=>`<div class="source-row"><span>${escapeHtml(s.name)}</span><span class="source-state">${s.direct&&FEED_MODE==='yardlink'&&LIVE_LISTINGS.length?'Imported':s.api&&FEED_MODE==='salvagealert'&&LIVE_LISTINGS.length?'Live':s.kind}</span></div>`).join('');
  let group='';$('#sourceRailList').innerHTML=SOURCES.map(s=>{const heading=s.group!==group?`<div class="source-group">${escapeHtml(s.group)}</div>`:'';group=s.group;return `${heading}<div class="source-network-row${s.featured?' featured':''}" title="${escapeHtml(s.name)}"><span class="source-mark">${escapeHtml(s.mark)}</span><span class="source-network-name">${escapeHtml(s.name)}</span><span class="source-network-kind">${escapeHtml(s.kind)}</span></div>`}).join('');
 }
 async function importFeed(file){
  try{
   const text=await file.text();const raw=parseCSV(text);if(!raw.length)throw new Error('No inventory rows found.');
   const rows=raw.map(normalizeFeedRow).filter(Boolean);if(!rows.length)throw new Error('Could not identify part or yard columns.');
-  LIVE_LISTINGS=rows;state.mode='Parts';state.sort='distance';$('#sortSelect').value='distance';recomputeDistances();render();
+  LIVE_LISTINGS=rows;FEED_MODE='yardlink';state.mode='Parts';state.sort='distance';$('#sortSelect').value='distance';recomputeDistances();render();
  }catch(err){alert(`YardLink import failed: ${err.message}`)}
 }
+
+async function loadLiveAuctions(){
+ const btn=$('#loadAuctionsBtn'), status=$('#auctionStatus');
+ const source=$('#auctionSourceSelect').value;
+ btn.disabled=true; btn.textContent='Loading…'; status.textContent='Calling TRIAD private backend…';
+ try{
+  const resp=await fetch('/api/salvage-search',{
+   method:'POST',
+   headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({source,page_size:10})
+  });
+  const payload=await resp.json().catch(()=>({}));
+  if(!resp.ok) throw new Error(payload.error||`Backend returned ${resp.status}`);
+  const raw=Array.isArray(payload.lots)?payload.lots:pickArrayPayload(payload);
+  if(!raw.length) throw new Error(payload.message||'API returned no lot records.');
+  LIVE_LISTINGS=raw.map(normalizeSalvageLot).filter(Boolean);
+  FEED_MODE='salvagealert';
+  state.mode='Vehicles'; state.sort='score';
+  $('#sortSelect').value='score';
+  status.innerHTML=`<strong>${LIVE_LISTINGS.length} live auction records loaded.</strong> Key stayed on the backend.`;
+  render();
+ }catch(err){
+  status.textContent=`Live API test failed: ${err.message}`;
+  alert(`TRIAD live auction test failed: ${err.message}`);
+ }finally{
+  btn.disabled=false; btn.textContent='Load live vehicles';
+ }
+}
+
 function downloadTemplate(){
  const csv='yard_name,stock_number,year,make,model,engine,part_description,price,mileage,condition,interchange_number,city,state,zip,phone,yard_lat,yard_lon,listing_url,image_url\n';
  const blob=new Blob([csv],{type:'text/csv'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='TRIAD_YardLink_Recyclers_Template.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -392,7 +497,8 @@ $$('#modeSegment button').forEach(b=>b.addEventListener('click',()=>{state.mode=
 $$('#viewSegment button').forEach(b=>b.addEventListener('click',()=>{state.view=b.dataset.view;render()}));
 $('#sortSelect').addEventListener('change',e=>{state.sort=e.target.value;render()});
 $('#applyBtn').addEventListener('click',()=>{state.radius=Number($('#radiusSelect').value);state.maxPrice=Number($('#priceSelect').value);render();closeFilters()});
-$('#resetBtn').addEventListener('click',()=>{state={mode:LIVE_LISTINGS.length?'Parts':'Everything',view:'list',query:'',radius:250,maxPrice:10000,sort:LIVE_LISTINGS.length?'distance':'score'};$('#searchInput').value='';$('#radiusSelect').value='250';$('#priceSelect').value='10000';$('#sortSelect').value=state.sort;render()});
+$('#resetBtn').addEventListener('click',()=>{state={mode:LIVE_LISTINGS.length?(FEED_MODE==='salvagealert'?'Vehicles':'Parts'):'Everything',view:'list',query:'',radius:250,maxPrice:10000,sort:LIVE_LISTINGS.length?'distance':'score'};$('#searchInput').value='';$('#radiusSelect').value='250';$('#priceSelect').value='10000';$('#sortSelect').value=state.sort;render()});
+$('#loadAuctionsBtn').addEventListener('click',loadLiveAuctions);
 $('#importFeedBtn').addEventListener('click',()=>$('#yardFeedInput').click());
 $('#yardFeedInput').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(f)importFeed(f);e.target.value=''});
 $('#downloadTemplateBtn').addEventListener('click',downloadTemplate);
@@ -401,7 +507,7 @@ $('#useLocationBtn').addEventListener('click',()=>{
  $('#useLocationBtn').textContent='Locating…';
  navigator.geolocation.getCurrentPosition(pos=>{userLocation={lat:pos.coords.latitude,lon:pos.coords.longitude};$('#locationInput').value='Current location';$('#useLocationBtn').textContent='Location active';recomputeDistances();render()},err=>{$('#useLocationBtn').textContent='Use my location';alert(`Could not use your location: ${err.message}`)},{enableHighAccuracy:false,timeout:10000,maximumAge:300000});
 });
-$('#clearFeedBtn').addEventListener('click',()=>{LIVE_LISTINGS=[];userLocation=null;state={mode:'Everything',view:'list',query:'',radius:250,maxPrice:10000,sort:'score'};$('#sortSelect').value='score';$('#locationInput').value='McAllen, TX';$('#useLocationBtn').textContent='Use my location';render()});
+$('#clearFeedBtn').addEventListener('click',()=>{LIVE_LISTINGS=[];FEED_MODE='demo';userLocation=null;state={mode:'Everything',view:'list',query:'',radius:250,maxPrice:10000,sort:'score'};$('#sortSelect').value='score';$('#locationInput').value='McAllen, TX';$('#useLocationBtn').textContent='Use my location';render()});
 $('#sourceBtn').addEventListener('click',e=>{e.stopPropagation();const wide=window.matchMedia('(min-width:1321px)').matches&&state.view==='list';if(wide){const main=$('#mainLayout');main.classList.toggle('sources-hidden');const visible=!main.classList.contains('sources-hidden');$('#sourceBtn').setAttribute('aria-expanded',String(visible));$('#sourcePopover').classList.remove('open')}else{const p=$('#sourcePopover');p.classList.toggle('open');$('#sourceBtn').setAttribute('aria-expanded',p.classList.contains('open'))}});
 document.addEventListener('click',e=>{if(!e.target.closest('.source-wrap')){$('#sourcePopover').classList.remove('open');$('#sourceBtn').setAttribute('aria-expanded','false')}});
 $('#hideSourceRail').addEventListener('click',()=>{$('#mainLayout').classList.add('sources-hidden');$('#sourceBtn').setAttribute('aria-expanded','false')});
