@@ -169,7 +169,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
    <button class="pill vehicle-pill" id="vehiclePill" type="button" title="Vehicle context">2009 Silverado · 5.3L ▾</button>
    <div class="source-wrap">
     <button class="pill source-btn" id="sourceBtn" type="button" aria-expanded="true"><span class="dot"></span><span class="source-label">Sources</span> <span id="sourceCount">22</span></button>
-    <div class="source-popover" id="sourcePopover" role="dialog" aria-label="Prototype source list">
+    <div class="source-popover" id="sourcePopover" role="dialog" aria-label="Source network">
       <div class="pop-head"><div><strong>Source coverage</strong><div class="pop-note">Target network — live connector status appears only after verification.</div></div></div>
       <div id="sourceRows"></div>
     </div>
@@ -185,7 +185,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
    <button type="button" data-mode="Parts">Parts</button>
    <button type="button" data-mode="Everything" class="active">Everything</button>
   </div>
-  <span class="prototype-note">Live search · SalvageAlert auctions + YardLink recycler feeds</span>
+  <span class="prototype-note">Live auction intelligence · direct recycler feeds</span>
  </div>
  <div class="segment view-segment" id="viewSegment" aria-label="View mode">
   <button type="button" data-view="list" class="active">List</button>
@@ -212,7 +212,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
    </div>
   </details>
   <button class="search-btn" id="applyBtn" type="button">Apply filters</button>
-  <button class="reset-btn" id="resetBtn" type="button">Reset prototype filters</button>
+  <button class="reset-btn" id="resetBtn" type="button">Reset filters</button>
   <div class="yardlink-box" id="auctionApiBox">
    <div class="yardlink-head"><span class="yardlink-title">Live Auction Feed</span><span class="yardlink-badge">API</span></div>
    <p class="yardlink-copy">Authorized live auction data through SalvageAlert. Type a vehicle in the top search bar and press Enter, or load the latest inventory here. Your API key stays on the private backend.</p>
@@ -221,14 +221,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
      <option value="copart_us">Copart US</option>
      <option value="iaai_us">IAA US</option>
      <option value="govdeals_us">GovDeals US</option>
-     <option value="all">All 3 (uses more credits)</option>
+     <option value="all">All US live sources (3 calls)</option>
     </select>
     <button class="yardlink-btn primary" id="loadAuctionsBtn" type="button">Search live vehicles</button>
    </div>
    <div class="feed-status" id="auctionStatus">Waiting for private backend connection.</div>
   </div>
   <div class="yardlink-box">
-   <div class="yardlink-head"><span class="yardlink-title">YardLink Direct Feed</span><span class="yardlink-badge">LIVE TEST</span></div>
+   <div class="yardlink-head"><span class="yardlink-title">YardLink Direct Feed</span><span class="yardlink-badge">DIRECT</span></div>
    <p class="yardlink-copy">Import inventory supplied directly by a recycler. Scout searches that feed locally in your browser — no scraping and no upload to a server.</p>
    <div class="yardlink-actions">
     <button class="yardlink-btn primary" id="importFeedBtn" type="button">Import recycler CSV</button>
@@ -242,7 +242,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
  </aside>
  <section class="results" id="resultsSection">
   <div class="results-head">
-   <div><h1>Unified results</h1><div class="results-meta" id="resultsMeta">5 prototype matches · normalized layout · no live connectors</div></div>
+   <div><h1>Unified results</h1><div class="results-meta" id="resultsMeta">Ready for live search</div></div>
    <select class="sort" id="sortSelect" aria-label="Sort results"><option value="score">TRIAD Score</option><option value="price">Price: low to high</option><option value="distance">Nearest first</option></select>
   </div>
   <div class="live-banner" id="liveFeedBanner"><span><strong>YardLink direct inventory</strong> · results below come from the CSV you imported.</span><button id="clearFeedBtn" type="button">Clear feed</button></div>
@@ -595,11 +595,13 @@ async function loadLiveAuctions(options={}){
   FEED_MODE='salvagealert';
   state.mode='Vehicles';
   state.sort='score';
-  // Server already handled the search; don't filter the returned set a second time.
   if(clearLocalQuery) state.query='';
   $('#sortSelect').value='score';
   const qNote=query?` for “${escapeHtml(query)}”`:'';
-  status.innerHTML=`<strong>${LIVE_LISTINGS.length} live auction records loaded${qNote}.</strong> Search ran against SalvageAlert, not just the 20 vehicles already on screen.`;
+  const sourceSummary=(payload.sources||[]).map(s=>`${s.name||s.source}: ${s.ok?(s.verified_count??0)+' match'+((s.verified_count??0)===1?'':'es'):'error'}`).join(' · ');
+  status.innerHTML=LIVE_LISTINGS.length
+    ? `<strong>${LIVE_LISTINGS.length} verified live auction match${LIVE_LISTINGS.length===1?'':'es'} loaded${qNote}.</strong>${sourceSummary?`<br>${escapeHtml(sourceSummary)}`:''}`
+    : `<strong>No verified live matches found${qNote}.</strong>${sourceSummary?`<br>${escapeHtml(sourceSummary)}`:''}<br>Try another source or a broader model search.`;
   render();
  }catch(err){
   status.textContent=`Live API search failed: ${err.message}`;
